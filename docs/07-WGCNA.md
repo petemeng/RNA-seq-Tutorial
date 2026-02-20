@@ -114,7 +114,7 @@ moduleColors <- labels2colors(net$colors)
 MEs <- net$MEs
 
 # 示例：关联处理因子（按你的 colData 字段替换）
-trait <- as.numeric(colData(dds)[rownames(datExpr), "treatment"] == "flg22")
+trait <- as.numeric(colData(dds)[rownames(datExpr), "condition"] == "AvrRpm1")
 moduleTraitCor <- bicor(MEs, trait, use = "pairwise.complete.obs")
 moduleTraitP <- corPvalueStudent(moduleTraitCor, nSamples = nrow(datExpr))
 ```
