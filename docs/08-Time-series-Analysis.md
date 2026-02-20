@@ -38,18 +38,18 @@
 ```r
 library(DESeq2)
 
-# 示例：time 为 0h/1h/3h/6h，treatment 为 Mock/flg22
-colData$time <- factor(colData$time, levels = c("0h", "1h", "3h", "6h"))
-colData$treatment <- relevel(factor(colData$treatment), ref = "Mock")
+# PRJDB11848 示例：WT 子集，time 为 0h/0.5h/3h，condition 为 mock/AvrRpm1
+colData$time <- factor(colData$time, levels = c("0h", "0.5h", "3h"))
+colData$condition <- relevel(factor(colData$condition), ref = "mock")
 
 dds <- DESeqDataSetFromMatrix(
   countData = counts_mat,
   colData = colData,
-  design = ~ treatment + time + treatment:time
+  design = ~ condition + time + condition:time
 )
 
 # 检验“是否存在时间相关响应（含交互）”
-dds_lrt <- DESeq(dds, test = "LRT", reduced = ~ treatment + time)
+dds_lrt <- DESeq(dds, test = "LRT", reduced = ~ condition + time)
 res_lrt <- results(dds_lrt)
 
 sig_dynamic <- subset(as.data.frame(res_lrt), padj < 0.05)
@@ -71,12 +71,12 @@ dds_wald <- DESeq(dds)
 resultsNames(dds_wald)
 
 # 在参考时间点（0h）下，处理主效应
-res_treat_0h <- results(dds_wald, name = "treatment_flg22_vs_Mock")
+res_treat_0h <- results(dds_wald, name = "condition_AvrRpm1_vs_mock")
 
-# 处理在 6h 的总效应 = 主效应 + interaction(6h)
-res_treat_6h <- results(
+# 处理在 3h 的总效应 = 主效应 + interaction(3h)
+res_treat_3h <- results(
   dds_wald,
-  list(c("treatment_flg22_vs_Mock", "treatmentflg22.time6h"))
+  list(c("condition_AvrRpm1_vs_mock", "conditionAvrRpm1.time3h"))
 )
 ```
 
@@ -162,6 +162,12 @@ Rscript scripts/05_generate_case_figures.R
 
 - `validation_run_downstream/results/ch8/time_series_LRT_WT.csv`
 - `validation_run_downstream/results/ch8/time_series_LRT_WT_sig.csv`
+
+验收命令（预期输出 `2927`）：
+
+```bash
+tail -n +2 validation_run_downstream/results/ch8/time_series_LRT_WT_sig.csv | wc -l
+```
 
 padj 分布图：
 
