@@ -4,3 +4,7 @@
 *.pyc
 .venv/
 env/
+Log.out
+validation_run/
+validation_run_mini/
+validation_run_downstream/

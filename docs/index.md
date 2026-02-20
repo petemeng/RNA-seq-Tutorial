@@ -38,6 +38,11 @@
 - [8. 时间序列分析](08-Time-series-Analysis.md)
 - [9. 多因素与交互作用设计](09-Multi-factor-Design.md)
 
+### 实测与复现 (Validated Workflow)
+
+- [10. 实测完整案例（PRJDB11848）](10-Validated-Case-Study-PRJDB11848.md)
+- [11. 故障排查与复现保障](11-Troubleshooting-and-Reproducibility.md)
+
 ---
 
 ## 推荐学习路径
@@ -55,4 +60,3 @@
 - 任何样本剔除或阈值调整都要记录理由。
 
 这套规范能显著提升结果可信度和团队协作效率。
-

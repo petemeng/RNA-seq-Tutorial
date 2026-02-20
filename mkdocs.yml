@@ -65,3 +65,6 @@ nav:
       - 7. WGCNA 共表达网络分析: 07-WGCNA.md
       - 8. 时间序列分析: 08-Time-series-Analysis.md
       - 9. 多因素与交互作用设计: 09-Multi-factor-Design.md
+  - 实测与复现:
+      - 10. 实测完整案例（PRJDB11848）: 10-Validated-Case-Study-PRJDB11848.md
+      - 11. 故障排查与复现保障: 11-Troubleshooting-and-Reproducibility.md
