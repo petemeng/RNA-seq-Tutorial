@@ -1,14 +1,144 @@
-﻿# 📖 Bulk RNA-seq 进阶专题 (Part 8)
+﻿# 📘 Bulk RNA-seq 进阶专题 (Part 8)
 
-## 第八章：时间序列分析 —— 捕捉动态转录组 (Time-series)
+## 第八章：时间序列分析 —— 捕捉动态转录组
 
-生物学过程（如：免疫响应、发育）是动态的。简单地两两比较会丢失演化的轨迹。
+时间序列数据的关键价值是“轨迹信息”。
+如果你只做 `T1 vs T0`、`T2 vs T0` 这种两两比较，会丢失动态过程中的整体模式。
 
-> 📘 **核心概念：似然比检验 (Likelihood Ratio Test, LRT)**
-> 在处理 3 个以上时间点时，推荐在 DESeq2 中使用 **LRT 检验**。
-> *   **Full Model**: `~ time` (基因随时间变化)
-> *   **Reduced Model**: `~ 1` (基因保持恒定)
-> **意义**：找出在整个时间轴上表现出显著波动的基因，避免多重比较导致的统计效能损失。
+---
 
-### 🛠️ 进阶工具：ImpulseDE2
-如果你研究的是短暂的、非线性的“脉冲”响应，推荐使用 `ImpulseDE2`，它能精准捕获瞬时波动信号。
+## 8.1 什么时候必须用时间序列模型？
+
+满足以下任意条件，就不建议只做 pairwise：
+
+1. 时间点 `>= 3`。
+2. 你关心“先升后降”或“短暂脉冲”这类非单调变化。
+3. 你需要比较不同处理在时间维度上的响应差异（interaction）。
+
+> 💡 **核心概念：LRT（似然比检验）**
+> 用 Full model 和 Reduced model 比较，直接回答：
+> “这个基因的表达是否随时间（或时间交互）显著变化？”
+
+---
+
+## 8.2 设计公式怎么选？
+
+| 生物学问题 | DESeq2 设计 | LRT reduced |
+| :--- | :--- | :--- |
+| 单条件时间变化 | `~ time` | `~ 1` |
+| 两条件共同时间效应 | `~ treatment + time` | `~ treatment` |
+| 关注条件-时间交互 | `~ treatment + time + treatment:time` | `~ treatment + time` |
+
+> ⚠️ 避坑指南：`time` 默认建议当作 **factor**（分类变量），除非你明确假设线性趋势。
+
+---
+
+## 8.3 实战演练：DESeq2 做时间序列 LRT
+
+```r
+library(DESeq2)
+
+# 示例：time 为 0h/1h/3h/6h，treatment 为 Mock/Flg22
+colData$time <- factor(colData$time, levels = c("0h", "1h", "3h", "6h"))
+colData$treatment <- relevel(factor(colData$treatment), ref = "Mock")
+
+dds <- DESeqDataSetFromMatrix(
+  countData = counts_mat,
+  colData = colData,
+  design = ~ treatment + time + treatment:time
+)
+
+# 检验“是否存在时间相关响应（含交互）”
+dds_lrt <- DESeq(dds, test = "LRT", reduced = ~ treatment + time)
+res_lrt <- results(dds_lrt)
+
+sig_dynamic <- subset(as.data.frame(res_lrt), padj < 0.05)
+nrow(sig_dynamic)
+```
+
+解释：
+
+- `padj < 0.05`：该基因存在显著时间交互动态。
+- 这一步是“筛动态基因”；具体在哪个时间点变，需要下一步 Wald/contrast。
+
+---
+
+## 8.4 提取具体时间点效应（Wald + contrast）
+
+```r
+# 同一设计下再跑 Wald（默认）
+dds_wald <- DESeq(dds)
+resultsNames(dds_wald)
+
+# 在参考时间点（0h）下，处理主效应
+res_treat_0h <- results(dds_wald, name = "treatment_Flg22_vs_Mock")
+
+# 处理在 6h 的总效应 = 主效应 + interaction(6h)
+res_treat_6h <- results(
+  dds_wald,
+  list(c("treatment_Flg22_vs_Mock", "treatmentFlg22.time6h"))
+)
+```
+
+> ⚠️ 避坑指南：交互模型中，“主效应”只对应参考水平。
+> 一定先 `resultsNames(dds)` 再提取，避免拿错系数。
+
+---
+
+## 8.5 动态模式可视化（聚类热图）
+
+```r
+library(pheatmap)
+
+vsd <- vst(dds_wald, blind = FALSE)
+sel_genes <- rownames(sig_dynamic)
+
+mat <- assay(vsd)[sel_genes, ]
+mat_z <- t(scale(t(mat)))
+
+anno <- as.data.frame(colData(dds_wald)[, c("time", "treatment")])
+pheatmap(
+  mat_z,
+  show_rownames = FALSE,
+  annotation_col = anno,
+  cluster_cols = FALSE
+)
+```
+
+教学建议：
+
+- 先按时间顺序排列样本，再做聚类，更容易解释“早期响应/晚期响应”。
+- 可对基因做 k-means 分组，得到“瞬时诱导型”“持续抑制型”等动态模块。
+
+---
+
+## 8.6 进阶工具：ImpulseDE2 何时值得上？
+
+当你预期是“脉冲型/非线性”表达轨迹（例如 1h 急升、3h 回落），`ImpulseDE2` 往往优于线性模型。
+
+```r
+# 伪代码示意：具体输入格式请按 ImpulseDE2 文档整理
+# library(ImpulseDE2)
+# res_imp <- runImpulseDE2(
+#   matCountData = counts(dds),
+#   dfAnnotation = annotation_df,
+#   boolCaseCtrl = TRUE,
+#   scaNProc = 8
+# )
+```
+
+---
+
+## 8.7 常见翻车点清单
+
+1. 每个时间点只有 1-2 个重复，导致动态结论不稳。
+2. 没有 `0h` 基线，后续解释非常困难。
+3. 把时间当 numeric 强行拟合线性，错过非线性轨迹。
+4. 把受试者重复测量当作独立样本（需要 mixed model 思路）。
+
+---
+
+## 8.8 本章小结
+
+时间序列分析的关键是先用 LRT 找“是否动态”，再用 contrast 定位“何时变化”。
+如果你的实验问题是“响应过程”而不是“终点差异”，时间序列模型是必须项，不是可选项。
