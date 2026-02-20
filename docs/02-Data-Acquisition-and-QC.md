@@ -1,87 +1,140 @@
-﻿# 📖 Bulk RNA-seq 数据分析最佳实践 (Part 2)
+﻿# Bulk RNA-seq 数据分析最佳实践 (Part 2)
 
 ## 第二章：数据获取与质量控制 (Data Acquisition & QC)
 
-### 2.1 优雅地获取原始数据 (Downloading Raw Data)
+> 核心原则：QC 不是“走流程”，而是决定数据是否可用于统计推断。
 
-我们在论文中常看到数据存放在 NCBI 的 **SRA (Sequence Read Archive)** 数据库中。许多老旧教程会教你使用 `sratoolkit` 中的 `fastq-dump` 来下载 `.sra` 文件并转化为 `.fastq`。
+---
 
-> 🛑 **避坑指南 (Pitfall)：放弃 fastq-dump！**
-> `fastq-dump` 速度奇慢，且经常断点失败。
-> **业界最佳实践：使用 ENA (European Nucleotide Archive) 数据库。** ENA 与 NCBI SRA 数据是实时同步的，但 ENA 直接提供打包好的 `.fastq.gz` 文件下载链接！
+## 2.1 从样本表驱动下载，而不是手敲命令
 
-为了演示，我们从 Airway 数据集中选取 2 个样本（双端测序 Paired-end）：
-* `SRR1039508` (Control 组)
-* `SRR1039509` (Treated 组)
+假设你已经有 `metadata/samplesheet.csv`，并且其中 `fastq_1/fastq_2` 是可下载 URL。
+
+目录初始化：
 
 ```bash
-# 构建项目目录结构
-mkdir -p ~/RNAseq_project/{raw_data,qc,cleandata}
-cd ~/RNAseq_project/raw_data
-
-# 使用 wget 下载 ENA 上的 FASTQ 文件
-# Control Sample
-wget ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR103/008/SRR1039508/SRR1039508_1.fastq.gz
-wget ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR103/008/SRR1039508/SRR1039508_2.fastq.gz
-
-# Treated Sample
-wget ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR103/009/SRR1039509/SRR1039509_1.fastq.gz
-wget ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR103/009/SRR1039509/SRR1039509_2.fastq.gz
+mkdir -p data/{raw_data,clean_data,qc/fastqc_raw,qc/fastqc_clean,fastp_reports,multiqc}
 ```
 
-### 2.2 质量控制 (Quality Control)
-
-拿到数据后，第一步是使用 `FastQC` 查看数据质量。
-
-> 📘 **核心概念：Phred 质量得分 (Phred Quality Score, Q-score)**
-> 测序仪每测出一个碱基 (A/T/C/G)，都会给它一个“自信度”打分。
-> 公式：$Q = -10 \times \log_{10}(P)$，其中 P 是测错的概率。
-> *   **Q20** = 错误率 1% (准确率 99%)
-> *   **Q30** = 错误率 0.1% (准确率 99.9%)
-> **金标准：** 优秀的测序数据，绝大多数碱基的质量得分应在 **Q30 以上**。
+示例批量下载脚本：
 
 ```bash
-# 运行 FastQC
-# -t 4 表示使用 4 个 CPU 线程
-fastqc -t 4 -o ../qc *.fastq.gz
+#!/usr/bin/env bash
+set -euo pipefail
+
+awk -F',' 'NR>1 {print $6"\n"$7}' metadata/samplesheet.csv | sed '/^$/d' | while read -r url; do
+  echo "Downloading: ${url}"
+  wget -c "$url" -P data/raw_data/
+done
 ```
 
-运行后，FastQC 会生成 HTML 报告。你需要重点关注以下三个指标：
-1. **Per base sequence quality**: 纵坐标就是 Q-score。箱线图如果掉入红色区域 (Q < 20)，说明测序质量极差。
-2. **Adapter Content**: 检查是否残留了测序接头 (Adapter)。
-3. **Sequence Duplication Levels**: Bulk RNA-seq 中一定程度的重复是正常的。
+> 避坑指南：下载脚本请保留日志（`tee logs/download.log`），后续追溯非常有用。
 
-### 2.3 数据清洗与过滤 (Data Trimming)
+---
 
-传统的做法是使用 `Trimmomatic` 去接头。但今天，我们推荐使用**当前最先进的工具：`fastp`**。
-它由 C++ 编写，速度极快，一步到位完成过滤、去接头、甚至生成清洗前后的双份网页报告。
+## 2.2 FastQC：先判断数据是否“可救”
+
+对原始 FASTQ 运行 FastQC：
 
 ```bash
-cd ~/RNAseq_project/
-mkdir -p cleandata fastp_reports
+fastqc -t 8 -o data/qc/fastqc_raw data/raw_data/*.fastq.gz
+```
 
-# 对 Control 样本进行清洗
+重点观察四类指标：
+
+1. `Per base sequence quality`：末端轻微下降常见，但大面积 <Q20 需要关注。
+2. `Adapter content`：明显上升说明需要去接头。
+3. `Per sequence GC content`：异常双峰可能提示污染或混样。
+4. `Overrepresented sequences`：判断接头、rRNA 或外源污染。
+
+---
+
+## 2.3 fastp 清洗：默认参数优先，避免过度裁剪
+
+### 单样本示例
+
+```bash
 fastp \
-  -i raw_data/SRR1039508_1.fastq.gz -I raw_data/SRR1039508_2.fastq.gz \
-  -o cleandata/SRR1039508_1_clean.fq.gz -O cleandata/SRR1039508_2_clean.fq.gz \
-  --thread 4 \
+  -i data/raw_data/SRR1039508_1.fastq.gz \
+  -I data/raw_data/SRR1039508_2.fastq.gz \
+  -o data/clean_data/SRR1039508_1.clean.fastq.gz \
+  -O data/clean_data/SRR1039508_2.clean.fastq.gz \
+  --thread 8 \
   --detect_adapter_for_pe \
-  -h fastp_reports/SRR1039508_fastp.html \
-  -j fastp_reports/SRR1039508_fastp.json
+  -h data/fastp_reports/SRR1039508.fastp.html \
+  -j data/fastp_reports/SRR1039508.fastp.json
 ```
 
-> 💡 **Best Practice：过度裁剪 (Over-trimming) 是有害的！**
-> 新手常犯的错误是为了让 FastQC 报告好看，设置极其严格的过滤条件。
-> **现代比对软件 (如 STAR) 具有“软裁切 (Soft-clipping)”功能**，它们足够聪明，能在比对时自动忽略少量低质量碱基。因此，`fastp` 使用默认参数去除接头和极低质量碱基即可，**保留更多数据意味着保留更多生物学真实信号**。
-
-### 2.4 化繁为简：聚合报告 (Aggregating Reports with MultiQC)
-
-想象一下，如果你有 100 个样本，你要点开 100 个 FastQC 的 HTML 吗？
-**`MultiQC`** 解决了这个痛点。它会扫描目录下所有支持的日志文件，并将它们合并成一个精美、可交互的单一网页报告。
+### 多样本批处理（samplesheet 驱动）
 
 ```bash
-# 回到项目根目录并运行
-multiqc . -o multiqc_report/
+#!/usr/bin/env bash
+set -euo pipefail
+
+while IFS=',' read -r sample_id run condition replicate layout fastq1 fastq2 batch time; do
+  [ "$sample_id" = "sample_id" ] && continue
+
+  f1="data/raw_data/$(basename "$fastq1")"
+  f2="data/raw_data/$(basename "$fastq2")"
+
+  fastp \
+    -i "$f1" -I "$f2" \
+    -o "data/clean_data/${sample_id}_1.clean.fastq.gz" \
+    -O "data/clean_data/${sample_id}_2.clean.fastq.gz" \
+    --thread 8 \
+    --detect_adapter_for_pe \
+    -h "data/fastp_reports/${sample_id}.html" \
+    -j "data/fastp_reports/${sample_id}.json"
+done < metadata/samplesheet.csv
 ```
 
-执行完毕后，打开 `multiqc_report/multiqc_report.html`。你可以在一张图里看到所有样本的测序深度、Q30 比例等。
+> Best Practice：先用默认参数跑一轮，再根据报告调整，不要一上来就激进过滤。
+
+---
+
+## 2.4 清洗后复检 + MultiQC 汇总
+
+```bash
+fastqc -t 8 -o data/qc/fastqc_clean data/clean_data/*.fastq.gz
+
+multiqc data \
+  --outdir data/multiqc \
+  --filename multiqc_report.html
+```
+
+MultiQC 是你给 PI 和同事汇报质量的主入口。
+
+---
+
+## 2.5 如何判定“通过 QC”
+
+没有绝对阈值，但可以用以下经验标准做初筛：
+
+| 指标 | 建议范围 | 说明 |
+| :--- | :--- | :--- |
+| Q30 比例 | > 80%（常见） | 具体与平台相关 |
+| Adapter 含量 | 清洗后显著下降 | 不追求绝对 0 |
+| 序列长度分布 | 与建库预期一致 | 异常截短需排查 |
+| 样本间总 reads | 量级接近 | 极端低深度样本单独评估 |
+
+> 避坑指南：QC 的目标是“保证可分析性”，不是把图修到全绿。
+
+---
+
+## 2.6 常见问题与应对
+
+1. **某样本 reads 数极低**：优先排查下载完整性和建库失败，不要盲目继续。
+2. **Adapter 清不干净**：确认接头来源，必要时手动指定 `--adapter_sequence`。
+3. **GC 曲线异常**：考虑污染、混样或物种不匹配。
+4. **重复率偏高**：在高表达组织中可能正常，需结合文库复杂度解释。
+
+---
+
+## 2.7 本章检查清单
+
+- 原始与清洗后 FastQC 都完成。
+- MultiQC 报告已生成并保存。
+- 低质量或异常样本有处理记录（剔除或保留理由）。
+- 清洗后的 FASTQ 文件命名规则一致。
+
+完成后进入比对/定量章节。

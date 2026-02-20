@@ -1,76 +1,152 @@
 ﻿# Chapter 0: 数据获取与元数据管理 (Data Acquisition)
 
-> **核心原则**：代码是廉价的，数据是昂贵的，而**元数据 (Metadata) 是不可或缺的**。
+> 核心原则：代码可以重写，数据很难重来；而元数据错误会让整个项目不可挽回。
 
 ---
 
-## 1. 数据来源：从 SRA 到 ENA
+## 0.1 先定义问题，再下载数据
 
-虽然 NCBI 的 **SRA (Sequence Read Archive)** 是最常用的数据库，但其实际下载体验往往不如欧洲生物信息学研究所的 **ENA (European Nucleotide Archive)**。
+在真正执行下载之前，先写清楚三个问题：
 
-### 1.1 为什么优先选择 ENA？
-1.  **直接访问 FASTQ**：ENA 提供直接的 `.fastq.gz` 下载链接，无需使用复杂的 `fastq-dump` 转换。
-2.  **速度优势**：支持 `Aspera (ascp)` 极速下载。
-3.  **元数据清晰**：ENA 的表格索引更适合程序化处理。
+1. 你要比较什么（例如 `Mock vs flg22`）？
+2. 你的最小生物学重复数是多少（建议每组 `n >= 3`）？
+3. 你的主要干扰因素是什么（批次、时间、组织、基因型）？
+
+> Best Practice：先写一份 1 页的“分析假设说明”，再开始做任何命令行操作。
 
 ---
 
-## 2. 实战演练：下载测试数据
+## 0.2 数据来源：SRA、ENA、GEO 怎么选
 
-我们将使用一组经典的拟南芥免疫响应数据（例如 PRJNA526071，包含 Mock 和 flg22 处理）。为了教程流畅，我们选取其中 4 个样本。
+### 为什么推荐 ENA 优先
 
-### 2.1 推荐工具：fasterq-dump (SRA-Toolkit)
-如果你必须从 SRA 下载，请放弃过时的 `fastq-dump`，改用多线程的 `fasterq-dump`。
+- ENA 与 SRA 数据同步，但通常提供更直接的 `.fastq.gz` 下载链接。
+- 对批量下载更友好，适合脚本化处理。
+- 元数据表结构清晰，方便与 `samplesheet` 对接。
 
-```bash
-# 1. 安装 SRA-Toolkit (建议通过 Conda)
-# conda install -c bioconda sra-tools
+### 典型来源关系
 
-# 2. 下载并转换为 FASTQ (以 SRR8694017 为例)
-# --split-files: 自动处理双端测序
-# --include-technical: 排除技术序列
-fasterq-dump --split-files --include-technical SRR8694017 -e 8 -O raw_data/
+- 论文常给 `GSE`（GEO）编号。
+- GEO 页面通常链接到 `SRP/PRJNA/SRR`。
+- 实际下载常由 ENA 或 SRA 完成。
+
+---
+
+## 0.3 元数据是分析管线的“单一真实来源”
+
+建议用一个 `metadata/samplesheet.csv` 驱动全流程，而不是把样本名写死在脚本里。
+
+### 最小字段模板
+
+| 列名 | 是否必填 | 说明 |
+| :--- | :--- | :--- |
+| `sample_id` | 是 | 样本唯一标识，不要重复 |
+| `run` | 是 | SRR/ERR/DRR 编号 |
+| `condition` | 是 | 主要比较因素（如 Mock/Flg22） |
+| `replicate` | 是 | 生物学重复编号 |
+| `layout` | 是 | `PE` 或 `SE` |
+| `fastq_1` | 是 | R1 文件路径或 URL |
+| `fastq_2` | PE 必填 | R2 文件路径或 URL |
+| `batch` | 建议 | 文库批次/上机批次 |
+| `time` | 视设计 | 时间点（如 0h/1h/6h） |
+
+示例：
+
+```csv
+sample_id,run,condition,replicate,layout,fastq_1,fastq_2,batch,time
+Mock_R1,SRR8694017,Mock,1,PE,raw_data/SRR8694017_1.fastq.gz,raw_data/SRR8694017_2.fastq.gz,B1,0h
+Mock_R2,SRR8694018,Mock,2,PE,raw_data/SRR8694018_1.fastq.gz,raw_data/SRR8694018_2.fastq.gz,B1,0h
+Flg22_R1,SRR8694019,Flg22,1,PE,raw_data/SRR8694019_1.fastq.gz,raw_data/SRR8694019_2.fastq.gz,B2,1h
+Flg22_R2,SRR8694020,Flg22,2,PE,raw_data/SRR8694020_1.fastq.gz,raw_data/SRR8694020_2.fastq.gz,B2,1h
 ```
 
-### 2.2 验证完整性：MD5 Checksum
-**绝不要跳过这一步。** 网络波动可能导致文件损坏，产生无法预知的报错。
+---
+
+## 0.4 实战：用 ENA 批量下载并校验
+
+先准备下载目录：
 
 ```bash
-# 下载官方提供的 MD5 文件并验证
-md5sum -c md5.txt
+mkdir -p RNAseq_project/{raw_data,metadata,logs}
+cd RNAseq_project
 ```
 
+如果你已经有 run 列表（每行一个 SRR）：
+
+```bash
+# runs.txt 示例
+# SRR8694017
+# SRR8694018
+# SRR8694019
+# SRR8694020
+```
+
+用 ENA 的 FTP 路径批量下载（示意）：
+
+```bash
+while read -r RUN; do
+  echo "Downloading ${RUN} ..."
+  wget -c "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/${RUN:0:6}/${RUN: -1}/${RUN}/${RUN}_1.fastq.gz" -P raw_data/
+  wget -c "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/${RUN:0:6}/${RUN: -1}/${RUN}/${RUN}_2.fastq.gz" -P raw_data/
+done < runs.txt
+```
+
+> 避坑指南：不同 SRR 的目录层级并不总是统一，建议优先从 ENA 网页导出真实 URL，再批量下载。
+
+### 完整性校验
+
+```bash
+# 使用官方提供的 md5 列表文件（示例名为 md5.txt）
+cd raw_data
+md5sum -c md5.txt | tee ../logs/md5_check.log
+```
+
+任何 `FAILED` 都要重新下载，不要带病进入下游流程。
+
 ---
 
-## 3. 最佳实践：构建样本表 (Sample Sheet)
-
-**这是 scRNA-best-practice 风格的灵魂：** 不要把样本信息硬编码在脚本里，而是维护一个 `samplesheet.csv`。
-
-| sample_id | group | treatment | time_point | fastq_1 | fastq_2 |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| Mock_R1 | Control | Mock | 0h | mock_r1_1.fq.gz | mock_r1_2.fq.gz |
-| flg22_R1 | Treated | flg22 | 1h | flg22_r1_1.fq.gz | flg22_r1_2.fq.gz |
-
-### 为什么这样做？
-1.  **可读性**：任何人看到这个表都能理解你的实验设计。
-2.  **自动化**：下游的 Snakemake 或 Nextflow 流程可以直接读取此表进行批处理。
-3.  **一致性**：确保 DGE 分析中的 `Condition` 分组与原始数据严格对应。
-
----
-
-## 4. 目录结构规范
-
-一个整洁的项目目录是成功的一半：
+## 0.5 数据组织规范
 
 ```text
 project_root/
 ├── data/
-│   ├── raw_data/          # 原始 FASTQ (只读)
-│   ├── processed_data/    # 比对与定量结果
-│   └── reference/         # Genome, GTF, Index
+│   ├── raw_data/              # 原始 FASTQ，只读
+│   ├── clean_data/            # fastp 后的数据
+│   ├── alignments/            # BAM/CRAM
+│   ├── quant/                 # Salmon/featureCounts 输出
+│   └── reference/             # FASTA/GTF/索引
 ├── metadata/
-│   └── samplesheet.csv    # 样本信息表
+│   ├── samplesheet.csv
+│   └── design_notes.md
 ├── scripts/
-│   └── analysis.R         # 分析代码
-└── results/               # 图表、表格输出
+│   ├── 01_qc.sh
+│   ├── 02_align.sh
+│   └── 03_deseq2.R
+├── logs/
+└── results/
 ```
+
+> Best Practice：`raw_data` 设为只读，避免无意覆盖原始文件。
+
+---
+
+## 0.6 常见翻车点
+
+1. 样本名和 FASTQ 文件名不一致，导致下游错配。
+2. 把技术重复当生物学重复，导致显著性虚高。
+3. 忽略 `batch` 字段，后续模型无法校正批次效应。
+4. 只保留处理组，不保留对照组原始数据与元信息。
+5. 下载后不做 MD5 校验，后面出现随机报错。
+
+---
+
+## 0.7 本章检查清单
+
+在进入下一章前，确认：
+
+- `samplesheet.csv` 字段完整、无重复 `sample_id`。
+- 每个样本都能在磁盘上找到对应 FASTQ。
+- 所有 FASTQ 通过 MD5 校验。
+- 项目目录结构已经固定，后续不再随意改路径。
+
+如果以上四项有任意一项未完成，不建议继续做 QC 与比对。

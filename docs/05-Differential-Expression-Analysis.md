@@ -1,67 +1,144 @@
-﻿# 📖 Bulk RNA-seq 数据分析最佳实践 (Part 5)
+﻿# Bulk RNA-seq 数据分析最佳实践 (Part 5)
 
-## 第五章：差异表达分析 —— 发现真正的生物学差异
+## 第五章：差异表达分析 (Differential Expression Analysis)
 
-差异分析的目标不仅仅是计算倍数变化 (Fold Change)，更重要的是评估这种变化是否具有**统计学显著性**。
-
-### 5.1 统计学底座：负二项分布 (Negative Binomial Distribution)
-
-为什么我们不能用简单的 T 检验？
-
-> 📘 **核心概念：过离散 (Overdispersion)**
-> 1. **泊松分布 (Poisson)**：在测序深度极高时，Reads 的计数理论上符合泊松分布（均值 = 方差）。
-> 2. **现实情况**：由于个体差异，**方差往往远大于均值**。这种现象称为“过离散”。
-> 3. **负二项分布**：通过引入“离散参数 (Dispersion)”，能完美建模这种高噪声数据。这是 DESeq2 和 edgeR 的核心数学基础。
+> 核心原则：差异分析不是“找大 Fold Change”，而是在噪声中做可靠推断。
 
 ---
 
-### 5.2 离散度估算：信息共享的智慧 (Dispersion Estimation)
+## 5.1 统计模型基础：负二项分布与离散度
 
-如果你只有 3 个重复，你几乎无法准确估计一个基因的真实方差。
+RNA-seq 计数通常存在过离散（方差 > 均值），DESeq2 用负二项模型处理这种特征。
 
-#### 💡 Best Practice：离散度收缩 (Dispersion Shrinkage)
-DESeq2 假设：具有相似表达水平的基因，其离散度应该是相似的。
-1. 它先为每个基因计算一个单独的离散度。
-2. 然后将这些点拟合到一条曲线上（全基因组平均水平）。
-3. 最后，将单个基因的离散度向曲线方向“收缩 (Shrink)”。
-*   **结果**：这种“信息共享”的方式极大地增强了统计效能，防止了异常样本导致的伪阳性。
+### 为什么不是 t-test
 
----
+- t-test 假设近似正态且方差结构简单。
+- 计数数据离散且异方差明显，直接 t-test 容易误判。
 
-### 5.3 LFC 收缩：让低表达基因保持安静 (LFC Shrinkage)
+DESeq2 的关键优势是：
 
-> ⚠️ **避坑指南 (Pitfall)：低表达基因的“虚假繁荣”**
-> 在 MA 图中，低表达区域的基因往往具有极大的 Log2 Fold Change，但这通常是由于 Counts 很小时的随机波动导致的噪声。
-
-#### 💡 Best Practice：使用 apeglm 算法进行收缩
-DESeq2 会对低表达或高变异基因的 LFC 进行收缩。
-*   **高表达/低噪声基因**：LFC 保持不变。
-*   **低表达/高噪声基因**：LFC 会被拉回到 0。
-*   **意义**：这让你的差异基因列表更加可靠，特别是在进行后续的 GSEA 富集分析时，不会被噪声干扰。
+1. 估计 size factor（样本深度校正）
+2. 估计 dispersion（基因层噪声建模）
+3. 进行稳健的广义线性模型检验
 
 ---
 
-### 5.4 多重假设检验校正：FDR 与 p-adj
+## 5.2 设计公式先于检验
 
-如果你测试了 20,000 个基因，按 p < 0.05 的标准，你会得到 1,000 个伪阳性。
+示例：
 
-> 📘 **核心概念：Benjamini-Hochberg (BH) 校正**
-> 我们不看原始的 p-value，而看 **Adjusted p-value (p-adj)**，即 **FDR (错误发现率)**。
-> **金标准：** 通常设定 **p-adj < 0.05** 且 **|log2FoldChange| > 1** 作为差异基因的标准。
+```r
+colData$condition <- relevel(factor(colData$condition), ref = "Control")
+colData$batch <- factor(colData$batch)
 
----
-
-### 🛠️ 实战演练：DESeq2 标准下游分析流程
-
-```R
-# 1. 运行差异分析主函数
-dds <- DESeq(dds)
-
-# 2. 提取结果并进行 LFC 收缩
-res <- results(dds, contrast=c("condition", "Treated", "Control"))
-res_shrunk <- lfcShrink(dds, coef="condition_Treated_vs_Control", type="apeglm")
-
-# 3. 排序并保存
-res_ordered <- res_shrunk[order(res_shrunk$padj),]
-write.csv(as.data.frame(res_ordered), file="DEG_results.csv")
+dds <- DESeqDataSetFromMatrix(
+  countData = counts_mat,
+  colData = colData,
+  design = ~ batch + condition
+)
 ```
+
+> Best Practice：先把 `reference level` 定好，再跑 `DESeq()`，避免后面反复重算。
+
+---
+
+## 5.3 标准 DESeq2 流程
+
+```r
+library(DESeq2)
+
+dds <- DESeq(dds)
+resultsNames(dds)
+
+res <- results(dds, contrast = c("condition", "Treated", "Control"))
+res <- lfcShrink(dds, contrast = c("condition", "Treated", "Control"), type = "apeglm")
+
+res_df <- as.data.frame(res)
+res_df <- res_df[order(res_df$padj), ]
+write.csv(res_df, file = "results/DEG_results_shrunk.csv")
+```
+
+解释：
+
+- `padj` 是 BH 校正后的 FDR。
+- `lfcShrink` 让低计数基因的 fold change 更稳定，更适合排序和展示。
+
+---
+
+## 5.4 阈值设置与解释
+
+常用阈值（建议作为初始标准）：
+
+- `padj < 0.05`
+- `|log2FoldChange| > 1`
+
+```r
+deg <- subset(res_df, padj < 0.05 & abs(log2FoldChange) > 1)
+write.csv(deg, file = "results/DEG_sig.csv", row.names = TRUE)
+```
+
+> 避坑指南：阈值不应机械固定。对低效应但高一致性的通路，GSEA 往往更合适。
+
+---
+
+## 5.5 可视化：MA 图与火山图
+
+```r
+# MA plot
+plotMA(res, ylim = c(-5, 5))
+```
+
+```r
+library(EnhancedVolcano)
+
+EnhancedVolcano(
+  res_df,
+  lab = rownames(res_df),
+  x = 'log2FoldChange',
+  y = 'padj',
+  pCutoff = 0.05,
+  FCcutoff = 1
+)
+```
+
+图形解读应回答两件事：
+
+1. 差异信号是否集中在合理范围。
+2. 是否存在由少数异常样本驱动的“假阳性高 FC”。
+
+---
+
+## 5.6 高级设置：effect-size 检验
+
+当你更关心“是否达到生物学意义的效应量”时，可用 `lfcThreshold`：
+
+```r
+res_lfc <- results(
+  dds,
+  contrast = c("condition", "Treated", "Control"),
+  lfcThreshold = 1,
+  altHypothesis = "greaterAbs"
+)
+```
+
+这比事后硬筛 `|log2FC|` 更统计一致。
+
+---
+
+## 5.7 常见翻车点
+
+1. 技术重复当生物学重复，显著性虚高。
+2. 忘记设置参考组，导致方向解释反了。
+3. 只看 p-value 不看效应量，得到“统计显著但生物意义弱”的结果。
+4. 直接使用未收缩 LFC 排名做下游叙事。
+
+---
+
+## 5.8 本章检查清单
+
+- 设计公式与实验问题一致。
+- 对比方向（Treated vs Control）已核实。
+- `padj` 与 `log2FC` 阈值已记录。
+- DEG 结果表与图形输出已保存。
+
+下一章进入功能富集与生物学解释。
