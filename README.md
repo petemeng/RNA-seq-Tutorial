@@ -4,7 +4,7 @@
 
 ## 本仓库现在包含
 - 完整教程文档（Chapter 0-9）
-- 实测跑通案例（拟南芥 `PRJDB11848`，36 样本）
+- 实测跑通案例（拟南芥 `PRJDB11848`，36 样本，`mock/AvrRpm1`）
 - 可直接执行的脚本（下载、定量、Chapter 4-9 下游）
 - 真实结果展示（DEG、富集、WGCNA、时间序列、多因素交互）
 
@@ -41,3 +41,4 @@ mkdocs serve
 ## 关键文档入口
 - 基础流程与实跑内容（定量到富集）：`docs/03-Alignment-and-Quantification.md` 到 `docs/06-Functional-Enrichment-Analysis.md`
 - 进阶流程与实跑内容（WGCNA/时间序列/交互）：`docs/07-WGCNA.md` 到 `docs/09-Multi-factor-Design.md`
+- 每章末尾含“本教程实跑代码与结果（PRJDB11848）”与验收命令
