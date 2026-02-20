@@ -28,7 +28,7 @@ DESeq2 的关键优势是：
 示例：
 
 ```r
-colData$condition <- relevel(factor(colData$condition), ref = "Mock")
+colData$condition <- relevel(factor(colData$condition), ref = "mock")
 colData$batch <- factor(colData$batch)
 
 dds <- DESeqDataSetFromMatrix(
@@ -50,8 +50,8 @@ library(DESeq2)
 dds <- DESeq(dds)
 resultsNames(dds)
 
-res <- results(dds, contrast = c("condition", "flg22", "Mock"))
-res <- lfcShrink(dds, contrast = c("condition", "flg22", "Mock"), type = "apeglm")
+res <- results(dds, contrast = c("condition", "AvrRpm1", "mock"))
+res <- lfcShrink(dds, coef = "condition_AvrRpm1_vs_mock", type = "apeglm")
 
 res_df <- as.data.frame(res)
 res_df <- res_df[order(res_df$padj), ]
@@ -115,7 +115,7 @@ EnhancedVolcano(
 ```r
 res_lfc <- results(
   dds,
-  contrast = c("condition", "flg22", "Mock"),
+  contrast = c("condition", "AvrRpm1", "mock"),
   lfcThreshold = 1,
   altHypothesis = "greaterAbs"
 )
@@ -137,7 +137,7 @@ res_lfc <- results(
 ## 5.8 本章检查清单
 
 - 设计公式与实验问题一致。
-- 对比方向（flg22 vs Mock）已核实。
+- 对比方向（AvrRpm1 vs mock）已核实。
 - `padj` 与 `log2FC` 阈值已记录。
 - DEG 结果表与图形输出已保存。
 
@@ -164,6 +164,12 @@ Rscript scripts/05_generate_case_figures.R
 - `validation_run_downstream/results/ch5/DEG_WT_AvrRpm1_vs_mock_shrunk.csv`
 - `validation_run_downstream/results/ch5/DEG_WT_AvrRpm1_vs_mock_sig.csv`
 - `validation_run_downstream/results/ch5/DEG_interaction_clf_vs_WT_sig.csv`
+
+验收命令（预期输出 `1541`）：
+
+```bash
+tail -n +2 validation_run_downstream/results/ch5/DEG_WT_AvrRpm1_vs_mock_sig.csv | wc -l
+```
 
 火山图：
 
