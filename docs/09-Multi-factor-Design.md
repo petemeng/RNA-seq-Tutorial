@@ -5,7 +5,7 @@
 真实实验很少只有一个变量。常见组合包括：
 
 - 基因型（WT/Mut）
-- 处理（Mock/flg22）
+- 处理（mock/AvrRpm1）
 - 时间（0h/1h/6h）
 - 批次（Batch1/Batch2）
 
@@ -23,9 +23,9 @@ design = ~ Genotype + Treatment + Genotype:Treatment
 ```
 
 - **Genotype 主效应**：在参考处理条件下，Mut 与 WT 的差异。
-- **Treatment 主效应**：在参考基因型下，flg22 与 Mock 的差异。
+- **Treatment 主效应**：在参考基因型下，AvrRpm1 与 mock 的差异。
 - **Interaction 交互效应**：
-  `(Mut_flg22 - Mut_Mock) - (WT_flg22 - WT_Mock)`
+  `(Mut_AvrRpm1 - Mut_mock) - (WT_AvrRpm1 - WT_mock)`
 
 > 💡 交互显著 = “差异的差异”显著。
 > 它表示某处理效应依赖于另一因素的水平。
@@ -36,7 +36,7 @@ design = ~ Genotype + Treatment + Genotype:Treatment
 
 如果你的科学问题是：
 
-1. “突变体对 flg22 的响应是否不同于 WT？”
+1. “突变体对 AvrRpm1 的响应是否不同于 WT？”
 2. “药物效应是否依赖基因型/性别/组织？”
 
 那就必须包含交互项，而不是只做分组拆分比较。
@@ -49,13 +49,13 @@ design = ~ Genotype + Treatment + Genotype:Treatment
 library(DESeq2)
 
 colData$genotype <- relevel(factor(colData$genotype), ref = "WT")
-colData$treatment <- relevel(factor(colData$treatment), ref = "Mock")
+colData$condition <- relevel(factor(colData$condition), ref = "mock")
 colData$batch <- factor(colData$batch)
 
 dds <- DESeqDataSetFromMatrix(
   countData = counts_mat,
   colData = colData,
-  design = ~ batch + genotype + treatment + genotype:treatment
+  design = ~ batch + genotype + condition + genotype:condition
 )
 
 dds <- DESeq(dds)
@@ -71,15 +71,15 @@ resultsNames(dds)
 
 ```r
 # 1) WT 中的处理效应（参考基因型）
-res_treat_in_wt <- results(dds, name = "treatment_flg22_vs_Mock")
+res_treat_in_wt <- results(dds, name = "condition_AvrRpm1_vs_mock")
 
-# 2) 交互效应：Mut 对处理的额外响应
-res_interaction <- results(dds, name = "genotypeMut.treatmentflg22")
+# 2) 交互效应：clf 对处理的额外响应
+res_interaction <- results(dds, name = "genotypeclf.conditionAvrRpm1")
 
-# 3) Mut 中的处理总效应 = 主效应 + 交互项
-res_treat_in_mut <- results(
+# 3) clf 中的处理总效应 = 主效应 + 交互项
+res_treat_in_clf <- results(
   dds,
-  list(c("treatment_flg22_vs_Mock", "genotypeMut.treatmentflg22"))
+  list(c("condition_AvrRpm1_vs_mock", "genotypeclf.conditionAvrRpm1"))
 )
 ```
 
@@ -93,7 +93,7 @@ res_treat_in_mut <- results(
 
 ## 9.5 模型质量检查与可视化建议
 
-1. 先看设计平衡性：每个 cell（如 `WT-Mock`、`WT-flg22`、`Mut-Mock`、`Mut-flg22`）至少建议 3 个重复。
+1. 先看设计平衡性：每个 cell（如 `WT-mock`、`WT-AvrRpm1`、`clf-mock`、`clf-AvrRpm1`）至少建议 3 个重复。
 2. 画交互图（interaction plot）检查方向是否符合预期。
 3. 对显著交互基因画分组箱线图，避免“统计显著但生物学不可解释”。
 
@@ -149,6 +149,14 @@ Rscript scripts/05_generate_case_figures.R
 - `validation_run_downstream/results/ch9/res_treat_in_wt.csv`
 - `validation_run_downstream/results/ch9/res_interaction.csv`
 - `validation_run_downstream/results/ch9/res_treat_in_clf.csv`
+
+验收命令（3 个文件都存在）：
+
+```bash
+ls validation_run_downstream/results/ch9/res_treat_in_wt.csv \
+   validation_run_downstream/results/ch9/res_interaction.csv \
+   validation_run_downstream/results/ch9/res_treat_in_clf.csv
+```
 
 交互项火山图：
 
