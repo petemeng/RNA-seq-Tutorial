@@ -1,0 +1,67 @@
+﻿site_name: RNA-seq Data Analysis Best Practices
+site_description: A comprehensive guide to bulk RNA-seq data analysis.
+site_author: RNA-seq Team
+repo_url: https://github.com/petemeng/RNA-seq-Tutorial
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  language: zh
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - search.highlight
+    - search.suggest
+    - content.code.copy
+    - content.code.annotate
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:pymdownx.emoji.twemoji
+      emoji_generator: !!python/name:pymdownx.emoji.to_svg
+  - attr_list
+  - md_in_html
+  - tables
+  - footnotes
+  - arithmatex:
+      generic: true
+
+extra_javascript:
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+
+nav:
+  - Home: index.md
+  - 基础流程:
+      - 0. 数据获取与元数据管理: 00-Data-Acquisition.md
+      - 1. 环境与参考基因组准备: 01-Environment-and-References.md
+      - 2. 质量控制 (QC) 与数据清洗: 02-Data-Acquisition-and-QC.md
+      - 3. 序列比对与定量: 03-Alignment-and-Quantification.md
+      - 4. 标准化与探索性分析 (EDA): 04-Normalization-and-Exploratory-Analysis.md
+      - 5. 差异表达分析 (DEA): 05-Differential-Expression-Analysis.md
+      - 6. 功能富集分析 (Enrichment): 06-Functional-Enrichment-Analysis.md
+  - 进阶专题:
+      - 7. WGCNA 共表达网络分析: 07-WGCNA.md
+      - 8. 时间序列分析: 08-Time-series-Analysis.md
+      - 9. 多因素与交互作用设计: 09-Multi-factor-Design.md
