@@ -1,174 +1,99 @@
-﻿# Bulk RNA-seq 数据分析最佳实践 (Part 5)
+# Bulk RNA-seq 数据分析最佳实践 (Part 5)
 
 ## 第五章：差异表达分析 (Differential Expression Analysis)
 
-> 核心原则：差异分析不是“找大 Fold Change”，而是在噪声中做可靠推断。
+本章按固定格式组织：先讲原理，再给代码，再给代码输出结果。
 
 ---
 
-## 5.1 统计模型基础：负二项分布与离散度
+## 5.1 原理：DEG 的核心是“带离散度建模的统计检验”
 
-RNA-seq 计数通常存在过离散（方差 > 均值），DESeq2 用负二项模型处理这种特征。
-
-### 为什么不是 t-test
-
-- t-test 假设近似正态且方差结构简单。
-- 计数数据离散且异方差明显，直接 t-test 容易误判。
-
-DESeq2 的关键优势是：
-
-1. 估计 size factor（样本深度校正）
-2. 估计 dispersion（基因层噪声建模）
-3. 进行稳健的广义线性模型检验
+- RNA-seq 是计数型数据，通常存在过离散
+- DESeq2 用负二项模型估计 size factor、dispersion，再做检验
+- 结果解释要同时看显著性（`padj`）和效应量（`log2FoldChange`）
 
 ---
 
-## 5.2 设计公式先于检验
-
-示例：
-
-```r
-colData$condition <- relevel(factor(colData$condition), ref = "mock")
-colData$batch <- factor(colData$batch)
-
-dds <- DESeqDataSetFromMatrix(
-  countData = counts_mat,
-  colData = colData,
-  design = ~ batch + condition
-)
-```
-
-> Best Practice：先把 `reference level` 定好，再跑 `DESeq()`，避免后面反复重算。
-
----
-
-## 5.3 标准 DESeq2 流程
+## 5.2 代码：运行 DESeq2 并导出结果
 
 ```r
 library(DESeq2)
 
+# 假设 dds 已由 tximport + colData 构建
 dds <- DESeq(dds)
 resultsNames(dds)
 
-res <- results(dds, contrast = c("condition", "AvrRpm1", "mock"))
-res <- lfcShrink(dds, coef = "condition_AvrRpm1_vs_mock", type = "apeglm")
+# WT: AvrRpm1 vs mock（LFC shrink）
+res_wt <- lfcShrink(dds, coef = "condition_AvrRpm1_vs_mock", type = "apeglm")
+res_wt_df <- as.data.frame(res_wt)
+res_wt_df <- res_wt_df[order(res_wt_df$padj), ]
+write.csv(res_wt_df, "artifacts/prjdb11848/results/ch5/DEG_WT_AvrRpm1_vs_mock_shrunk.csv")
 
-res_df <- as.data.frame(res)
-res_df <- res_df[order(res_df$padj), ]
-write.csv(res_df, file = "results/DEG_results_shrunk.csv")
+# 阈值筛选
+deg_wt <- subset(res_wt_df, !is.na(padj) & padj < 0.05 & abs(log2FoldChange) > 1)
+write.csv(deg_wt, "artifacts/prjdb11848/results/ch5/DEG_WT_AvrRpm1_vs_mock_sig.csv")
+
+# 交互项（clf vs WT 的处理响应差异）
+res_inter <- results(dds, name = "genotypeclf.conditionAvrRpm1")
+res_inter_df <- as.data.frame(res_inter)
+res_inter_df <- res_inter_df[order(res_inter_df$padj), ]
+write.csv(res_inter_df, "artifacts/prjdb11848/results/ch5/DEG_interaction_clf_vs_WT.csv")
+
+deg_inter <- subset(res_inter_df, !is.na(padj) & padj < 0.05 & abs(log2FoldChange) > 1)
+write.csv(deg_inter, "artifacts/prjdb11848/results/ch5/DEG_interaction_clf_vs_WT_sig.csv")
 ```
 
-解释：
-
-- `padj` 是 BH 校正后的 FDR。
-- `lfcShrink` 让低计数基因的 fold change 更稳定，更适合排序和展示。
-
 ---
 
-## 5.4 阈值设置与解释
-
-常用阈值（建议作为初始标准）：
-
-- `padj < 0.05`
-- `|log2FoldChange| > 1`
-
-```r
-deg <- subset(res_df, padj < 0.05 & abs(log2FoldChange) > 1)
-write.csv(deg, file = "results/DEG_sig.csv", row.names = TRUE)
-```
-
-> 避坑指南：阈值不应机械固定。对低效应但高一致性的通路，GSEA 往往更合适。
-
----
-
-## 5.5 可视化：MA 图与火山图
-
-```r
-# MA plot
-plotMA(res, ylim = c(-5, 5))
-```
-
-```r
-library(EnhancedVolcano)
-
-EnhancedVolcano(
-  res_df,
-  lab = rownames(res_df),
-  x = 'log2FoldChange',
-  y = 'padj',
-  pCutoff = 0.05,
-  FCcutoff = 1
-)
-```
-
-图形解读应回答两件事：
-
-1. 差异信号是否集中在合理范围。
-2. 是否存在由少数异常样本驱动的“假阳性高 FC”。
-
----
-
-## 5.6 高级设置：effect-size 检验
-
-当你更关心“是否达到生物学意义的效应量”时，可用 `lfcThreshold`：
-
-```r
-res_lfc <- results(
-  dds,
-  contrast = c("condition", "AvrRpm1", "mock"),
-  lfcThreshold = 1,
-  altHypothesis = "greaterAbs"
-)
-```
-
-这比事后硬筛 `|log2FC|` 更统计一致。
-
----
-
-## 5.7 常见翻车点
-
-1. 技术重复当生物学重复，显著性虚高。
-2. 忘记设置参考组，导致方向解释反了。
-3. 只看 p-value 不看效应量，得到“统计显著但生物意义弱”的结果。
-4. 直接使用未收缩 LFC 排名做下游叙事。
-
----
-
-## 5.8 本章检查清单
-
-- 设计公式与实验问题一致。
-- 对比方向（AvrRpm1 vs mock）已核实。
-- `padj` 与 `log2FC` 阈值已记录。
-- DEG 结果表与图形输出已保存。
-
-下一章进入功能富集与生物学解释。
-
----
-
-## 5.9 本教程实跑代码与结果（PRJDB11848）
-
-本章对应的实跑代码在下游一体化脚本中：
+## 5.3 代码：统计 DEG 数量并查看结果头部
 
 ```bash
-Rscript scripts/04_downstream_ch4_to_ch9.R
+# 显著 DEG 数量（WT）
+tail -n +2 artifacts/prjdb11848/results/ch5/DEG_WT_AvrRpm1_vs_mock_sig.csv | wc -l
+
+# 交互项显著 DEG 数量
+tail -n +2 artifacts/prjdb11848/results/ch5/DEG_interaction_clf_vs_WT_sig.csv | wc -l
+
+# 查看 WT 显著 DEG 前 5 行
+head -n 6 artifacts/prjdb11848/results/ch5/DEG_WT_AvrRpm1_vs_mock_sig.csv
+
+# 查看交互项显著 DEG 前 5 行
+head -n 6 artifacts/prjdb11848/results/ch5/DEG_interaction_clf_vs_WT_sig.csv
+```
+
+### 输出结果
+
+```text
+1541
+56
+"","baseMean","log2FoldChange","lfcSE","pvalue","padj"
+"AT5G15950",1058.46429885084,-1.45376652095534,0.132731770663756,5.16733272722286e-29,4.50074680541111e-25
+"AT1G09935",24.1197681031312,3.74698979819632,0.364417164046629,2.44079011892465e-26,1.41728546238891e-22
+"AT3G17420",88.8579253411927,1.63508829634183,0.162226020945527,4.51659669259174e-25,1.57358228769896e-21
+"AT1G09310",2457.14852891811,-1.39998771718618,0.142523808393732,6.84344059187218e-24,1.7030390730059e-20
+"AT1G64060",266.611658384728,1.18063546805895,0.122747998195324,7.40067456565989e-23,1.61149688667244e-19
+"","baseMean","log2FoldChange","lfcSE","stat","pvalue","padj"
+"AT1G67070",49.4803711208944,-1.5755619595937,0.313552297126098,-5.02487774458903,5.03753339073799e-07,0.00168686843122252
+"AT3G61060",127.599719325857,-1.22285834313158,0.253060089891281,-4.83228447305515,1.34975200454455e-06,0.00251098864578772
+"AT3G55560",39.2719988293596,-1.19171445089373,0.253284246997521,-4.70504764911572,2.53806668243077e-06,0.00265592815399615
+"AT4G38470",206.993199756586,-1.0452717288759,0.221874001988044,-4.71110503939182,2.46377201395389e-06,0.00265592815399615
+"AT5G13400",140.757962415624,1.19134842011623,0.250851013492529,4.7492270552525,2.04195583734993e-06,0.00265592815399615
+```
+
+---
+
+## 5.4 代码：结果图（MA + Volcano）
+
+```bash
 Rscript scripts/05_generate_case_figures.R
+ls docs/assets/validated_case/ch5_*.png
 ```
 
-真实结果（WT: `AvrRpm1 vs mock`）：
+### 输出结果
 
-- 显著 DEG（`padj < 0.05` 且 `|log2FC| > 1`）：`1541`
-- 交互项显著 DEG（`genotype:condition`）：`56`
-
-结果文件：
-
-- `validation_run_downstream/results/ch5/DEG_WT_AvrRpm1_vs_mock_shrunk.csv`
-- `validation_run_downstream/results/ch5/DEG_WT_AvrRpm1_vs_mock_sig.csv`
-- `validation_run_downstream/results/ch5/DEG_interaction_clf_vs_WT_sig.csv`
-
-验收命令（预期输出 `1541`）：
-
-```bash
-tail -n +2 validation_run_downstream/results/ch5/DEG_WT_AvrRpm1_vs_mock_sig.csv | wc -l
+```text
+docs/assets/validated_case/ch5_ma_wt.png
+docs/assets/validated_case/ch5_volcano_wt.png
 ```
 
 火山图：
@@ -178,3 +103,14 @@ tail -n +2 validation_run_downstream/results/ch5/DEG_WT_AvrRpm1_vs_mock_sig.csv 
 MA 图：
 
 ![MA WT](assets/validated_case/ch5_ma_wt.png)
+
+---
+
+## 5.5 本章产物（网页可见）
+
+- `artifacts/prjdb11848/results/ch5/DEG_WT_AvrRpm1_vs_mock_shrunk.csv`
+- `artifacts/prjdb11848/results/ch5/DEG_WT_AvrRpm1_vs_mock_sig.csv`
+- `artifacts/prjdb11848/results/ch5/DEG_interaction_clf_vs_WT.csv`
+- `artifacts/prjdb11848/results/ch5/DEG_interaction_clf_vs_WT_sig.csv`
+- `docs/assets/validated_case/ch5_volcano_wt.png`
+- `docs/assets/validated_case/ch5_ma_wt.png`
