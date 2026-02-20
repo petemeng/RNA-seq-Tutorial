@@ -9,8 +9,7 @@
 - 真实结果展示（DEG、富集、WGCNA、时间序列、多因素交互）
 
 ## 关键更新（2026-02-20）
-- 新增实测章节：`docs/10-Validated-Case-Study-PRJDB11848.md`
-- 新增故障排查章节：`docs/11-Troubleshooting-and-Reproducibility.md`
+- 将实跑代码与结果整合进原有章节（`docs/03` 到 `docs/09`）
 - 新增可运行脚本：`scripts/`
 
 ## 快速开始
@@ -40,6 +39,5 @@ mkdocs serve
 ```
 
 ## 关键文档入口
-- 实测完整案例（含结果图与指标）：`docs/10-Validated-Case-Study-PRJDB11848.md`
-- 故障排查与复现保障：`docs/11-Troubleshooting-and-Reproducibility.md`
-- 实测脚本全文：`docs/12-Validated-Case-Study-Full-Scripts.md`
+- 基础流程与实跑内容（定量到富集）：`docs/03-Alignment-and-Quantification.md` 到 `docs/06-Functional-Enrichment-Analysis.md`
+- 进阶流程与实跑内容（WGCNA/时间序列/交互）：`docs/07-WGCNA.md` 到 `docs/09-Multi-factor-Design.md`

@@ -157,3 +157,24 @@ head(hub, 20)
 WGCNA 适合“样本量较大 + 目标是系统层解释”的场景。  
 标准流程是：`vst/rlog -> 选 power -> 建模块 -> 关联表型 -> 提 hub`。  
 只要你把样本质量、批次效应和相关性度量控制好，WGCNA 是非常有教学价值和发表价值的进阶方法。
+
+---
+
+## 7.9 本教程实跑代码与结果（PRJDB11848）
+
+本章对应的实跑代码在下游一体化脚本中：
+
+```bash
+Rscript scripts/04_downstream_ch4_to_ch9.R
+```
+
+结果文件：
+
+- `validation_run_downstream/results/ch7/wgcna_soft_threshold.csv`
+- `validation_run_downstream/results/ch7/wgcna_modules.csv`
+- `validation_run_downstream/results/ch7/module_trait_cor.csv`
+- `validation_run_downstream/results/ch7/module_trait_p.csv`
+
+说明：
+
+- 为保证教程运行时长可控，实跑脚本对构网输入限制为高变 `5000` 基因。

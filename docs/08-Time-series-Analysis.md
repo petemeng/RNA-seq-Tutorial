@@ -143,3 +143,26 @@ pheatmap(
 时间序列分析的关键是先用 LRT 找“是否动态”，再用 contrast 定位“何时变化”。
 如果你的实验问题是“响应过程”而不是“终点差异”，时间序列模型是必须项，不是可选项。
 
+---
+
+## 8.9 本教程实跑代码与结果（PRJDB11848）
+
+本章对应的实跑代码在下游一体化脚本中：
+
+```bash
+Rscript scripts/04_downstream_ch4_to_ch9.R
+Rscript scripts/05_generate_case_figures.R
+```
+
+真实结果（WT 子集 LRT）：
+
+- 显著动态基因（`padj < 0.05`）：`2927`
+
+结果文件：
+
+- `validation_run_downstream/results/ch8/time_series_LRT_WT.csv`
+- `validation_run_downstream/results/ch8/time_series_LRT_WT_sig.csv`
+
+padj 分布图：
+
+![LRT padj](assets/validated_case/ch8_lrt_padj_hist.png)

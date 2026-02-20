@@ -38,11 +38,9 @@
 - [8. 时间序列分析](08-Time-series-Analysis.md)
 - [9. 多因素与交互作用设计](09-Multi-factor-Design.md)
 
-### 实测与复现 (Validated Workflow)
+### 实跑内容整合说明
 
-- [10. 实测完整案例（PRJDB11848）](10-Validated-Case-Study-PRJDB11848.md)
-- [11. 故障排查与复现保障](11-Troubleshooting-and-Reproducibility.md)
-- [12. 实测案例完整脚本源码](12-Validated-Case-Study-Full-Scripts.md)
+- 实跑代码和结果已整合进对应章节（`03-09`），每章末尾都有“本教程实跑代码与结果（PRJDB11848）”小节。
 
 ---
 

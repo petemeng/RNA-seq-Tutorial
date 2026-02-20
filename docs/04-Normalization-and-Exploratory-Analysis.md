@@ -136,3 +136,22 @@ mat_corrected <- removeBatchEffect(mat, batch = colData(dds)$batch)
 - 已确定批次是否进入设计公式。
 
 完成后再进入差异表达分析。
+
+---
+
+## 4.10 本教程实跑代码与结果（PRJDB11848）
+
+本章对应的实跑代码在下游一体化脚本中：
+
+```bash
+Rscript scripts/04_downstream_ch4_to_ch9.R
+```
+
+本章关键产物：
+
+- `validation_run_downstream/results/ch4/PCA_data.csv`
+- `validation_run_downstream/results/ch4/sample_distance_heatmap.pdf`
+
+PCA 实跑结果图：
+
+![PCA](assets/validated_case/ch4_pca.png)

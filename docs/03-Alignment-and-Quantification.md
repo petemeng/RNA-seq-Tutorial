@@ -159,3 +159,32 @@ txi <- tximport(files, type = "salmon", tx2gene = tx2gene, countsFromAbundance =
 
 完成后进入标准化与 EDA 章节。
 
+---
+
+## 3.9 本教程实跑代码与结果（PRJDB11848）
+
+以下命令已在教程环境实跑通过：
+
+```bash
+# 生成样本表
+bash scripts/01_prepare_prjdb11848_samplesheet.sh
+
+# 下载 FASTQ
+bash scripts/02_download_fastq.sh
+
+# Salmon 定量
+bash scripts/03_quantify_salmon.sh
+```
+
+对应产物：
+
+- `validation_run_downstream/metadata/samplesheet.csv`（36 样本，含表头共 37 行）
+- `validation_run_downstream/data/raw_data/*.fastq.gz`（72 个文件）
+- `validation_run_downstream/data/quant/<sample_id>/quant.sf`（36 个样本目录）
+- `validation_run_downstream/logs/salmon_quant_<sample_id>.log`
+
+本次实跑 mapping rate（36 样本）：
+
+- `min = 63.953%`
+- `mean = 95.231%`
+- `max = 97.471%`

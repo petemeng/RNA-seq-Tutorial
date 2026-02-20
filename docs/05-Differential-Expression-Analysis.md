@@ -143,3 +143,32 @@ res_lfc <- results(
 
 下一章进入功能富集与生物学解释。
 
+---
+
+## 5.9 本教程实跑代码与结果（PRJDB11848）
+
+本章对应的实跑代码在下游一体化脚本中：
+
+```bash
+Rscript scripts/04_downstream_ch4_to_ch9.R
+Rscript scripts/05_generate_case_figures.R
+```
+
+真实结果（WT: `AvrRpm1 vs mock`）：
+
+- 显著 DEG（`padj < 0.05` 且 `|log2FC| > 1`）：`1541`
+- 交互项显著 DEG（`genotype:condition`）：`56`
+
+结果文件：
+
+- `validation_run_downstream/results/ch5/DEG_WT_AvrRpm1_vs_mock_shrunk.csv`
+- `validation_run_downstream/results/ch5/DEG_WT_AvrRpm1_vs_mock_sig.csv`
+- `validation_run_downstream/results/ch5/DEG_interaction_clf_vs_WT_sig.csv`
+
+火山图：
+
+![Volcano WT](assets/validated_case/ch5_volcano_wt.png)
+
+MA 图：
+
+![MA WT](assets/validated_case/ch5_ma_wt.png)

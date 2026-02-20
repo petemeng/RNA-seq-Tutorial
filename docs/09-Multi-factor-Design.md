@@ -133,3 +133,23 @@ ggplot(df_plot, aes(x = treatment, y = expr, color = genotype, group = genotype)
 多因素分析的核心不是“复杂”，而是“可解释”。
 只要你明确参考水平、对比逻辑和交互含义，DESeq2 可以稳定回答大多数实验设计问题。
 
+---
+
+## 9.8 本教程实跑代码与结果（PRJDB11848）
+
+本章对应的实跑代码在下游一体化脚本中：
+
+```bash
+Rscript scripts/04_downstream_ch4_to_ch9.R
+Rscript scripts/05_generate_case_figures.R
+```
+
+结果文件：
+
+- `validation_run_downstream/results/ch9/res_treat_in_wt.csv`
+- `validation_run_downstream/results/ch9/res_interaction.csv`
+- `validation_run_downstream/results/ch9/res_treat_in_clf.csv`
+
+交互项火山图：
+
+![Interaction Volcano](assets/validated_case/ch9_interaction_volcano.png)

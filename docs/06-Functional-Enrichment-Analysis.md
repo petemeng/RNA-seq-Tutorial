@@ -184,3 +184,26 @@ ekk <- enrichKEGG(
 
 基础流程到此闭环完成。
 
+---
+
+## 6.9 本教程实跑代码与结果（PRJDB11848）
+
+本章对应的实跑代码在下游一体化脚本中：
+
+```bash
+Rscript scripts/04_downstream_ch4_to_ch9.R
+Rscript scripts/05_generate_case_figures.R
+```
+
+结果文件：
+
+- `validation_run_downstream/results/ch6/GO_ORA_WT.csv`
+- `validation_run_downstream/results/ch6/GO_GSEA_WT.csv`
+
+GO ORA Top terms：
+
+![GO ORA](assets/validated_case/ch6_go_ora_top15.png)
+
+GO GSEA Top terms：
+
+![GO GSEA](assets/validated_case/ch6_go_gsea_top15.png)
