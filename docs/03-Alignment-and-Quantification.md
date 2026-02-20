@@ -214,14 +214,3 @@ bash scripts/03_quantify_salmon.sh
 
 [^soneson2015]: Soneson C, Love MI, Robinson MD. (2015) Differential analyses for RNA-seq: transcript-level estimates improve gene-level inferences. *F1000Research* 4:1521. DOI: [10.12688/f1000research.7563.2](https://doi.org/10.12688/f1000research.7563.2)
 
----
-
-## 3.12 Contributors
-
-### Authors
-
-- *(待补充)*
-
-### Reviewers
-
-- *(待补充)*

@@ -70,3 +70,5 @@ nav:
       - 11. 代码与结果索引: 13-Code-and-Results-Manifest.md
       - 12. 实测案例完整脚本源码: 12-Validated-Case-Study-Full-Scripts.md
       - 13. 故障排查与复现保障: 11-Troubleshooting-and-Reproducibility.md
+  - 附录:
+      - 术语表: glossary.md

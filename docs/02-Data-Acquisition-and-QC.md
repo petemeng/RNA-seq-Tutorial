@@ -155,14 +155,3 @@ MultiQC 报告是你向 PI 和合作者汇报数据质量的主入口。它将�
 
 [^ewels2016]: Ewels P, Magnusson M, Lundin S, Käller M. (2016) MultiQC: summarize analysis results for multiple tools and samples in a single report. *Bioinformatics* 32(19):3047-3048. DOI: [10.1093/bioinformatics/btw354](https://doi.org/10.1093/bioinformatics/btw354)
 
----
-
-## 2.10 Contributors
-
-### Authors
-
-- *(待补充)*
-
-### Reviewers
-
-- *(待补充)*

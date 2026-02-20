@@ -257,14 +257,3 @@ res_lfc <- results(
 
 [^costa-silva2017]: Costa-Silva J, Domingues D, Lopes FM. (2017) RNA-Seq differential expression analysis: An extended review and a software tool. *PLoS ONE* 12(12):e0190152. DOI: [10.1371/journal.pone.0190152](https://doi.org/10.1371/journal.pone.0190152)
 
----
-
-## 5.12 Contributors
-
-### Authors
-
-- *(待补充)*
-
-### Reviewers
-
-- *(待补充)*

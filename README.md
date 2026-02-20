@@ -1,14 +1,8 @@
-# RNA-seq Tutorial (scRNA-best-practice Style)
+# RNA-seq Tutorial (sc-best-practices Style)
 
-一个以“可运行 + 可验收 + 可追溯”为核心的 Bulk RNA-seq 教程仓库。
+一个以"可运行 + 可验收 + 可追溯"为核心的 Bulk RNA-seq 教程仓库。
 
-## 你现在可以在网页上直接看到什么
-
-- 分步运行代码：`scripts/`
-- 本次实跑结果快照：`artifacts/prjdb11848/`
-- 教程图像结果：`docs/assets/validated_case/`
-- 端到端实跑文档：`docs/10-Validated-Case-Study-PRJDB11848.md`
-- 完整脚本源码：`docs/12-Validated-Case-Study-Full-Scripts.md`
+在线文档：<https://petemeng.github.io/RNA-seq-Tutorial/>
 
 ## 5 步跑通（PRJDB11848）
 
@@ -31,30 +25,24 @@ Rscript scripts/04_downstream_ch4_to_ch9.R
 Rscript scripts/05_generate_case_figures.R
 ```
 
-## 结果如何验收
+## 验收数字
 
-- DEG 数量（WT AvrRpm1 vs mock）：
-```bash
-tail -n +2 validation_run_downstream/results/ch5/DEG_WT_AvrRpm1_vs_mock_sig.csv | wc -l
-```
-预期：`1541`
+| 指标 | 预期值 |
+|------|--------|
+| WT 显著 DEG（padj < 0.05, \|log2FC\| > 1） | 1541 |
+| 时间序列 LRT 显著基因 | 2927 |
+| Salmon 定量样本数 | 36 |
+| 教程展示图 | 7 张 |
 
-- 时间序列 LRT 显著基因数：
-```bash
-tail -n +2 validation_run_downstream/results/ch8/time_series_LRT_WT_sig.csv | wc -l
-```
-预期：`2927`
+## 产物快照
 
-## 已上传的“本次运行”产物目录
+已上传至 `artifacts/prjdb11848/`，包含结果文件 20 个、日志 39 个，可通过 `CHECKSUMS.sha256` 校验完整性。
 
-- 产物根目录：`artifacts/prjdb11848/`
-- 文件清单：`artifacts/prjdb11848/FILELIST.txt`
-- SHA256 校验：`artifacts/prjdb11848/CHECKSUMS.sha256`
-- 环境版本：`artifacts/prjdb11848/tool_versions.txt`
-
-## 文档预览
+## 本地预览文档
 
 ```bash
 pip install mkdocs-material
 mkdocs serve
 ```
+
+详细教程内容请访问[在线文档](https://petemeng.github.io/RNA-seq-Tutorial/)或查看 `docs/index.md`。

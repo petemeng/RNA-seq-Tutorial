@@ -211,14 +211,3 @@ ggplot(df_plot, aes(x = condition, y = expr, color = genotype, group = genotype)
 
 [^nieuwenhuis2011]: Nieuwenhuis S, Forstmann BU, Wagenmakers EJ. (2011) Erroneous analyses of interactions in neuroscience: a problem of significance. *Nature Neuroscience* 14:1105-1107. DOI: [10.1038/nn.2886](https://doi.org/10.1038/nn.2886)
 
----
-
-## 9.12 Contributors
-
-### Authors
-
-- *(待补充)*
-
-### Reviewers
-
-- *(待补充)*

@@ -205,14 +205,3 @@ project_root/
 
 [^noble2009]: Noble WS. (2009) A quick guide to organizing computational biology projects. *PLoS Computational Biology* 5(7):e1000424. DOI: [10.1371/journal.pcbi.1000424](https://doi.org/10.1371/journal.pcbi.1000424)
 
----
-
-## 0.10 Contributors
-
-### Authors
-
-- *(待补充)*
-
-### Reviewers
-
-- *(待补充)*

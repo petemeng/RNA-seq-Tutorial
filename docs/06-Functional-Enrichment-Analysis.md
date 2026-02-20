@@ -201,14 +201,3 @@ ekk <- enrichKEGG(
 
 [^yu2012]: Yu G, Wang LG, Han Y, He QY. (2012) clusterProfiler: an R package for comparing biological themes among gene clusters. *OMICS* 16(5):284-287. DOI: [10.1089/omi.2011.0118](https://doi.org/10.1089/omi.2011.0118)
 
----
-
-## 6.11 Contributors
-
-### Authors
-
-- *(待补充)*
-
-### Reviewers
-
-- *(待补充)*

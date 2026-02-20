@@ -169,14 +169,3 @@ head(hub, 20)
 
 [^langfelder2008]: Langfelder P, Horvath S. (2008) WGCNA: an R package for weighted correlation network analysis. *BMC Bioinformatics* 9:559. DOI: [10.1186/1471-2105-9-559](https://doi.org/10.1186/1471-2105-9-559)
 
----
-
-## 7.10 Contributors
-
-### Authors
-
-- *(待补充)*
-
-### Reviewers
-
-- *(待补充)*
