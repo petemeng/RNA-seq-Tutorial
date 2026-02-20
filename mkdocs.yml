@@ -68,3 +68,4 @@ nav:
   - 实测与复现:
       - 10. 实测完整案例（PRJDB11848）: 10-Validated-Case-Study-PRJDB11848.md
       - 11. 故障排查与复现保障: 11-Troubleshooting-and-Reproducibility.md
+      - 12. 实测案例完整脚本源码: 12-Validated-Case-Study-Full-Scripts.md

@@ -28,6 +28,9 @@ bash scripts/03_quantify_salmon.sh
 
 # 4) 下游 4-9 章
 Rscript scripts/04_downstream_ch4_to_ch9.R
+
+# 5) 生成教程展示图（火山图等）
+Rscript scripts/05_generate_case_figures.R
 ```
 
 ## 文档预览
@@ -35,3 +38,8 @@ Rscript scripts/04_downstream_ch4_to_ch9.R
 pip install mkdocs-material
 mkdocs serve
 ```
+
+## 关键文档入口
+- 实测完整案例（含结果图与指标）：`docs/10-Validated-Case-Study-PRJDB11848.md`
+- 故障排查与复现保障：`docs/11-Troubleshooting-and-Reproducibility.md`
+- 实测脚本全文：`docs/12-Validated-Case-Study-Full-Scripts.md`
