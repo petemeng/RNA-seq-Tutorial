@@ -1,6 +1,6 @@
 ﻿# RNA-seq Data Analysis Best Practices
 
-一套对标 `scRNA-seq best practices` 的 Bulk RNA-seq 标准化教程。
+一套对标 `scRNA-seq best practices` 的 Bulk RNA-seq 标准化教程（当前以拟南芥 Mock/flg22 体系为主线示例）。
 
 ## 核心特性
 - **Why over How**：深入统计学原理。
@@ -12,3 +12,4 @@
 pip install mkdocs-material
 mkdocs serve
 ```
+

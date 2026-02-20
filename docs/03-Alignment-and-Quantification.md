@@ -29,8 +29,8 @@
 ```bash
 STAR --runThreadN 8 --runMode genomeGenerate \
   --genomeDir data/reference/star_index \
-  --genomeFastaFiles data/reference/human_gencode_v45/GRCh38.primary_assembly.genome.fa \
-  --sjdbGTFfile data/reference/human_gencode_v45/gencode.v45.annotation.gtf \
+  --genomeFastaFiles data/reference/arabidopsis_ens58/Arabidopsis_thaliana.TAIR10.dna.toplevel.fa \
+  --sjdbGTFfile data/reference/arabidopsis_ens58/Arabidopsis_thaliana.TAIR10.58.gtf \
   --sjdbOverhang 149
 ```
 
@@ -39,9 +39,9 @@ STAR --runThreadN 8 --runMode genomeGenerate \
 ```bash
 STAR --runThreadN 8 \
   --genomeDir data/reference/star_index \
-  --readFilesIn data/clean_data/SRR1039508_1.clean.fastq.gz data/clean_data/SRR1039508_2.clean.fastq.gz \
+  --readFilesIn data/clean_data/SRR8694017_1.clean.fastq.gz data/clean_data/SRR8694017_2.clean.fastq.gz \
   --readFilesCommand zcat \
-  --outFileNamePrefix data/alignments/SRR1039508. \
+  --outFileNamePrefix data/alignments/SRR8694017. \
   --outSAMtype BAM SortedByCoordinate \
   --twopassMode Basic \
   --quantMode GeneCounts
@@ -50,7 +50,7 @@ STAR --runThreadN 8 \
 ### 3) 基本质控
 
 ```bash
-samtools flagstat data/alignments/SRR1039508.Aligned.sortedByCoord.out.bam > data/alignments/SRR1039508.flagstat.txt
+samtools flagstat data/alignments/SRR8694017.Aligned.sortedByCoord.out.bam > data/alignments/SRR8694017.flagstat.txt
 ```
 
 重点看：
@@ -67,7 +67,7 @@ samtools flagstat data/alignments/SRR1039508.Aligned.sortedByCoord.out.bam > dat
 
 ```bash
 salmon index \
-  -t data/reference/human_gencode_v45/gencode.v45.transcripts.fa \
+  -t data/reference/arabidopsis_ens58/Arabidopsis_thaliana.TAIR10.cdna.all.fa \
   -i data/reference/salmon_index \
   -k 31
 ```
@@ -78,13 +78,13 @@ salmon index \
 salmon quant \
   -i data/reference/salmon_index \
   -l A \
-  -1 data/clean_data/SRR1039508_1.clean.fastq.gz \
-  -2 data/clean_data/SRR1039508_2.clean.fastq.gz \
+  -1 data/clean_data/SRR8694017_1.clean.fastq.gz \
+  -2 data/clean_data/SRR8694017_2.clean.fastq.gz \
   --validateMappings \
   --gcBias \
   --seqBias \
   -p 8 \
-  -o data/quant/SRR1039508
+  -o data/quant/SRR8694017
 ```
 
 > `-l A` 会自动推断文库链特异性，适合教程和未知文库类型场景。
@@ -158,3 +158,4 @@ txi <- tximport(files, type = "salmon", tx2gene = tx2gene, countsFromAbundance =
 - 异常样本有处理结论（剔除、保留、重测建议）。
 
 完成后进入标准化与 EDA 章节。
+

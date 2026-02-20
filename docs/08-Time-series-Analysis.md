@@ -38,7 +38,7 @@
 ```r
 library(DESeq2)
 
-# 示例：time 为 0h/1h/3h/6h，treatment 为 Mock/Flg22
+# 示例：time 为 0h/1h/3h/6h，treatment 为 Mock/flg22
 colData$time <- factor(colData$time, levels = c("0h", "1h", "3h", "6h"))
 colData$treatment <- relevel(factor(colData$treatment), ref = "Mock")
 
@@ -71,12 +71,12 @@ dds_wald <- DESeq(dds)
 resultsNames(dds_wald)
 
 # 在参考时间点（0h）下，处理主效应
-res_treat_0h <- results(dds_wald, name = "treatment_Flg22_vs_Mock")
+res_treat_0h <- results(dds_wald, name = "treatment_flg22_vs_Mock")
 
 # 处理在 6h 的总效应 = 主效应 + interaction(6h)
 res_treat_6h <- results(
   dds_wald,
-  list(c("treatment_Flg22_vs_Mock", "treatmentFlg22.time6h"))
+  list(c("treatment_flg22_vs_Mock", "treatmentflg22.time6h"))
 )
 ```
 
@@ -142,3 +142,4 @@ pheatmap(
 
 时间序列分析的关键是先用 LRT 找“是否动态”，再用 contrast 定位“何时变化”。
 如果你的实验问题是“响应过程”而不是“终点差异”，时间序列模型是必须项，不是可选项。
+

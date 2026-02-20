@@ -5,7 +5,7 @@
 真实实验很少只有一个变量。常见组合包括：
 
 - 基因型（WT/Mut）
-- 处理（Mock/Flg22）
+- 处理（Mock/flg22）
 - 时间（0h/1h/6h）
 - 批次（Batch1/Batch2）
 
@@ -23,9 +23,9 @@ design = ~ Genotype + Treatment + Genotype:Treatment
 ```
 
 - **Genotype 主效应**：在参考处理条件下，Mut 与 WT 的差异。
-- **Treatment 主效应**：在参考基因型下，Treated 与 Mock 的差异。
+- **Treatment 主效应**：在参考基因型下，flg22 与 Mock 的差异。
 - **Interaction 交互效应**：
-  `(Mut_Treated - Mut_Mock) - (WT_Treated - WT_Mock)`
+  `(Mut_flg22 - Mut_Mock) - (WT_flg22 - WT_Mock)`
 
 > 💡 交互显著 = “差异的差异”显著。
 > 它表示某处理效应依赖于另一因素的水平。
@@ -71,15 +71,15 @@ resultsNames(dds)
 
 ```r
 # 1) WT 中的处理效应（参考基因型）
-res_treat_in_wt <- results(dds, name = "treatment_Flg22_vs_Mock")
+res_treat_in_wt <- results(dds, name = "treatment_flg22_vs_Mock")
 
 # 2) 交互效应：Mut 对处理的额外响应
-res_interaction <- results(dds, name = "genotypeMut.treatmentFlg22")
+res_interaction <- results(dds, name = "genotypeMut.treatmentflg22")
 
 # 3) Mut 中的处理总效应 = 主效应 + 交互项
 res_treat_in_mut <- results(
   dds,
-  list(c("treatment_Flg22_vs_Mock", "genotypeMut.treatmentFlg22"))
+  list(c("treatment_flg22_vs_Mock", "genotypeMut.treatmentflg22"))
 )
 ```
 
@@ -93,7 +93,7 @@ res_treat_in_mut <- results(
 
 ## 9.5 模型质量检查与可视化建议
 
-1. 先看设计平衡性：每个 cell（如 `WT-Mock`、`WT-Flg22`、`Mut-Mock`、`Mut-Flg22`）至少建议 3 个重复。
+1. 先看设计平衡性：每个 cell（如 `WT-Mock`、`WT-flg22`、`Mut-Mock`、`Mut-flg22`）至少建议 3 个重复。
 2. 画交互图（interaction plot）检查方向是否符合预期。
 3. 对显著交互基因画分组箱线图，避免“统计显著但生物学不可解释”。
 
@@ -132,3 +132,4 @@ ggplot(df_plot, aes(x = treatment, y = expr, color = genotype, group = genotype)
 
 多因素分析的核心不是“复杂”，而是“可解释”。
 只要你明确参考水平、对比逻辑和交互含义，DESeq2 可以稳定回答大多数实验设计问题。
+

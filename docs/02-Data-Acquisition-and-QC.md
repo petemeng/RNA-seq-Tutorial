@@ -55,14 +55,14 @@ fastqc -t 8 -o data/qc/fastqc_raw data/raw_data/*.fastq.gz
 
 ```bash
 fastp \
-  -i data/raw_data/SRR1039508_1.fastq.gz \
-  -I data/raw_data/SRR1039508_2.fastq.gz \
-  -o data/clean_data/SRR1039508_1.clean.fastq.gz \
-  -O data/clean_data/SRR1039508_2.clean.fastq.gz \
+  -i data/raw_data/SRR8694017_1.fastq.gz \
+  -I data/raw_data/SRR8694017_2.fastq.gz \
+  -o data/clean_data/SRR8694017_1.clean.fastq.gz \
+  -O data/clean_data/SRR8694017_2.clean.fastq.gz \
   --thread 8 \
   --detect_adapter_for_pe \
-  -h data/fastp_reports/SRR1039508.fastp.html \
-  -j data/fastp_reports/SRR1039508.fastp.json
+  -h data/fastp_reports/SRR8694017.fastp.html \
+  -j data/fastp_reports/SRR8694017.fastp.json
 ```
 
 ### 多样本批处理（samplesheet 驱动）
@@ -138,3 +138,4 @@ MultiQC 是你给 PI 和同事汇报质量的主入口。
 - 清洗后的 FASTQ 文件命名规则一致。
 
 完成后进入比对/定量章节。
+

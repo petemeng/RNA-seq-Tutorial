@@ -28,7 +28,7 @@ DESeq2 的关键优势是：
 示例：
 
 ```r
-colData$condition <- relevel(factor(colData$condition), ref = "Control")
+colData$condition <- relevel(factor(colData$condition), ref = "Mock")
 colData$batch <- factor(colData$batch)
 
 dds <- DESeqDataSetFromMatrix(
@@ -50,8 +50,8 @@ library(DESeq2)
 dds <- DESeq(dds)
 resultsNames(dds)
 
-res <- results(dds, contrast = c("condition", "Treated", "Control"))
-res <- lfcShrink(dds, contrast = c("condition", "Treated", "Control"), type = "apeglm")
+res <- results(dds, contrast = c("condition", "flg22", "Mock"))
+res <- lfcShrink(dds, contrast = c("condition", "flg22", "Mock"), type = "apeglm")
 
 res_df <- as.data.frame(res)
 res_df <- res_df[order(res_df$padj), ]
@@ -115,7 +115,7 @@ EnhancedVolcano(
 ```r
 res_lfc <- results(
   dds,
-  contrast = c("condition", "Treated", "Control"),
+  contrast = c("condition", "flg22", "Mock"),
   lfcThreshold = 1,
   altHypothesis = "greaterAbs"
 )
@@ -137,8 +137,9 @@ res_lfc <- results(
 ## 5.8 本章检查清单
 
 - 设计公式与实验问题一致。
-- 对比方向（Treated vs Control）已核实。
+- 对比方向（flg22 vs Mock）已核实。
 - `padj` 与 `log2FC` 阈值已记录。
 - DEG 结果表与图形输出已保存。
 
 下一章进入功能富集与生物学解释。
+

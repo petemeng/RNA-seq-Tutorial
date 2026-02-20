@@ -42,7 +42,7 @@
 | :--- | :--- | :--- |
 | `sample_id` | 是 | 样本唯一标识，不要重复 |
 | `run` | 是 | SRR/ERR/DRR 编号 |
-| `condition` | 是 | 主要比较因素（如 Mock/Flg22） |
+| `condition` | 是 | 主要比较因素（如 Mock/flg22） |
 | `replicate` | 是 | 生物学重复编号 |
 | `layout` | 是 | `PE` 或 `SE` |
 | `fastq_1` | 是 | R1 文件路径或 URL |
@@ -56,8 +56,8 @@
 sample_id,run,condition,replicate,layout,fastq_1,fastq_2,batch,time
 Mock_R1,SRR8694017,Mock,1,PE,raw_data/SRR8694017_1.fastq.gz,raw_data/SRR8694017_2.fastq.gz,B1,0h
 Mock_R2,SRR8694018,Mock,2,PE,raw_data/SRR8694018_1.fastq.gz,raw_data/SRR8694018_2.fastq.gz,B1,0h
-Flg22_R1,SRR8694019,Flg22,1,PE,raw_data/SRR8694019_1.fastq.gz,raw_data/SRR8694019_2.fastq.gz,B2,1h
-Flg22_R2,SRR8694020,Flg22,2,PE,raw_data/SRR8694020_1.fastq.gz,raw_data/SRR8694020_2.fastq.gz,B2,1h
+flg22_R1,SRR8694019,flg22,1,PE,raw_data/SRR8694019_1.fastq.gz,raw_data/SRR8694019_2.fastq.gz,B2,1h
+flg22_R2,SRR8694020,flg22,2,PE,raw_data/SRR8694020_1.fastq.gz,raw_data/SRR8694020_2.fastq.gz,B2,1h
 ```
 
 ---
@@ -150,3 +150,4 @@ project_root/
 - 项目目录结构已经固定，后续不再随意改路径。
 
 如果以上四项有任意一项未完成，不建议继续做 QC 与比对。
+
