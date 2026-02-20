@@ -37,43 +37,54 @@
 
 ### 2.1 构建工具
 
-- **Jupyter Book**：将 Jupyter Notebook (.ipynb) 和 Markdown (.md) 编译为在线书籍
+- **MkDocs Material**：将 Markdown (.md) 编译为在线书籍，配置文件为 `mkdocs.yml`
 - **GitHub**：版本控制 + 社区贡献 (Issue / PR)
-- **GitHub Actions**：自动构建部署
-- **Conda/Mamba**：环境管理，每章提供最小环境文件
+- **GitHub Pages**：自动部署，在线地址 `https://petemeng.github.io/RNA-seq-Tutorial/`
+- **R + Bioconductor**：核心分析语言（DESeq2, tximport, clusterProfiler, WGCNA 等）
+- **Salmon**：转录本定量工具
 
-### 2.2 项目结构
+### 2.2 项目结构（实际）
 
 ```
-Bioinformatics-Tutorial/
+RNA-seq-Tutorial/
 │
-├── _config.yml                        # Jupyter Book 配置
-├── _toc.yml                           # 目录结构
-├── requirements.txt                   # Python 依赖
-├── .github/workflows/deploy.yml       # 自动部署
-├── README.md
+├── mkdocs.yml                         # MkDocs Material 配置 + nav
+├── README.md                          # GitHub 入口 + 5 步复现
+├── CLAUDE.md                          # AI 协作技能指南（本文件）
 │
-├── intro.md                           # 前言 (Preamble)
-│
-├── part1_foundations/                  # 第一部分：基础
-│   ├── ch01_xxx.ipynb                 # 每章一个 notebook
-│   ├── ch02_xxx.ipynb
-│   └── ch03_xxx.md                    # 纯理论章节可用 md
-│
-├── part2_xxx/                         # 第二部分
-│   ├── ch04_xxx.ipynb
-│   └── ...
-│
-├── appendix/
+├── docs/                              # 教程正文（Markdown）
+│   ├── index.md                       # 首页
+│   ├── 00-Data-Acquisition.md         # Ch0  数据获取与元数据管理
+│   ├── 01-Environment-and-References.md # Ch1 环境与参考基因组
+│   ├── 02-Data-Acquisition-and-QC.md  # Ch2  质量控制
+│   ├── 03-Alignment-and-Quantification.md # Ch3 比对与定量
+│   ├── 04-Normalization-and-Exploratory-Analysis.md # Ch4 标准化与EDA
+│   ├── 05-Differential-Expression-Analysis.md # Ch5 差异表达
+│   ├── 06-Functional-Enrichment-Analysis.md # Ch6 功能富集
+│   ├── 07-WGCNA.md                    # Ch7  共表达网络
+│   ├── 08-Time-series-Analysis.md     # Ch8  时间序列
+│   ├── 09-Multi-factor-Design.md      # Ch9  多因素设计
+│   ├── 10-Validated-Case-Study-PRJDB11848.md # Ch10 端到端实战
+│   ├── 11-Troubleshooting-and-Reproducibility.md # Ch11 故障排查
+│   ├── 12-Validated-Case-Study-Full-Scripts.md # Ch12 完整脚本
+│   ├── 13-Code-and-Results-Manifest.md # Ch13 代码与结果清单
 │   ├── glossary.md                    # 术语表
-│   └── references.bib                 # 统一参考文献 (BibTeX)
+│   └── assets/validated_case/         # 实跑结果图（7 张 PNG）
 │
-├── environments/                      # 每章的 Conda 环境
-│   ├── ch01.yml
-│   └── ch02.yml
+├── scripts/                           # 可直接运行的复现脚本
+│   ├── 01_prepare_prjdb11848_samplesheet.sh
+│   ├── 02_download_fastq.sh
+│   ├── 03_quantify_salmon.sh
+│   ├── 04_downstream_ch4_to_ch9.R
+│   └── 05_generate_case_figures.R
 │
-└── data/                              # 示例数据（或提供下载链接）
-    └── README.md
+└── artifacts/prjdb11848/              # 已上传的实跑结果快照
+    ├── FILELIST.txt
+    ├── CHECKSUMS.sha256
+    ├── tool_versions.txt
+    ├── metadata/
+    ├── results/ch4..ch9/
+    └── logs/
 ```
 
 ---
@@ -98,7 +109,7 @@ Bioinformatics-Tutorial/
 2. **Benchmark 驱动**
    - 推荐工具时必须给出依据：benchmark 论文、社区共识或实测经验
    - 不回避说"我们推荐 X 而不是 Y"，但要给理由
-   - 格式：`我们推荐使用 X {cite}`author2023`，因为在 benchmark Z 中它在 ... 方面表现最优。`
+   - 格式：`我们推荐使用 X [^author2023]，因为在 benchmark Z 中它在 ... 方面表现最优。`
 
 3. **输出即证据**
    - 重要的代码输出（图表、统计量）直接嵌入正文
@@ -143,7 +154,7 @@ sc.settings.set_figure_params(dpi=80, facecolor="white", frameon=False)
 ```
 
 我们使用 NeurIPS 2021 单细胞数据整合挑战赛的 10x Multiome 数据集
-{cite}`luecken2021`，该数据集包含来自 12 名健康人类供体的骨髓单核细胞。
+[^luecken2021]，该数据集包含来自 12 名健康人类供体的骨髓单核细胞。
 
 ```python
 adata = sc.read_10x_h5(
@@ -160,9 +171,9 @@ adata
 2. 我们推荐使用 MAD-based 自适应阈值而非固定阈值，因为固定阈值难以
    适应不同实验条件和组织类型。
 3. 对于 ambient RNA 校正，我们推荐 SoupX，它在多个 benchmark 中表
-   现稳定 {cite}`young2020`。
+   现稳定 [^young2020]。
 4. Doublet 检测推荐使用 scDblFinder，它在 benchmark 中具有最佳的
-   精度-召回平衡 {cite}`xi2021`。
+   精度-召回平衡 [^xi2021]。
 ````
 
 ---
@@ -191,15 +202,16 @@ adata
     4. 如果有方法选择：明确推荐，引用 benchmark
 
   推荐工具时使用提示框：
-  ```{admonition} Recommendation
-  我们推荐使用 **X** 进行此步骤。在 benchmark Y 中，
-  X 在 ... 指标上优于 Z 和 W {cite}`ref`。
+  ```
+  !!! tip "Recommendation"
+      我们推荐使用 **X** 进行此步骤。在 benchmark Y 中，
+      X 在 ... 指标上优于 Z 和 W [^ref]。
   ```
 
   注意事项使用警告框：
-  ```{admonition} Warning
-  :class: warning
-  不要在归一化之前进行特征选择，因为...
+  ```
+  !!! warning "注意"
+      不要在归一化之前进行特征选择，因为...
   ```
 
 ## N.M+1 Key Takeaways
@@ -207,30 +219,24 @@ adata
   每条 1-2 句话，简洁有力。
 
 ## N.M+2 References
-  本章引用的文献（由 Jupyter Book 的 citation 系统自动生成）
-
-## N.M+3 Contributors
-  ### Authors
-  - 姓名（单位）
-  ### Reviewers
-  - 姓名（单位）
+  本章引用的文献（脚注格式 [^author2023]）
 ```
 
-### 4.2 Admonition 标注框使用规范
+### 4.2 Admonition 标注框使用规范（MkDocs Material 语法）
 
-| 类型 | 用途 | 示例 |
+| 类型 | 用途 | 语法 |
 |------|------|------|
-| `{admonition} Recommendation` | 明确推荐某个工具/方法 | "我们推荐使用 scDblFinder..." |
-| `{admonition} Note` | 补充说明、技巧 | "这里我们使用 MAD 而非固定阈值..." |
-| `{admonition} Warning` `:class: warning` | 常见陷阱、注意事项 | "不要对 log-normalized 数据使用此方法..." |
-| `{admonition} Tip` `:class: tip` | 实用技巧 | "可以用 `adata.obs` 快速检查..." |
-| `{admonition} See also` | 相关章节交叉引用 | "关于降维的详细讨论，参见第 9 章" |
+| `!!! tip "Recommendation"` | 明确推荐某个工具/方法 | "我们推荐使用 scDblFinder..." |
+| `!!! note` | 补充说明、技巧 | "这里我们使用 MAD 而非固定阈值..." |
+| `!!! warning` | 常见陷阱、注意事项 | "不要对 log-normalized 数据使用此方法..." |
+| `!!! tip` | 实用技巧 | "可以用 `adata.obs` 快速检查..." |
+| `!!! abstract "本章要点 (Key Takeaways)"` | 每章末尾总结 | 5-8 条核心要点 |
 
 ### 4.3 代码规范
 
-- 使用 **Python** 为主（scanpy/AnnData 生态）
-- 必要时提供 **R** 替代方案（Seurat/Bioconductor）
-- 代码风格遵循 PEP 8
+- 使用 **R** 为主（DESeq2/Bioconductor 生态）
+- Shell 脚本用于数据下载和 Salmon 定量
+- 代码风格遵循 tidyverse style guide
 - 每个代码块上方用 1-2 句话说明这段代码在做什么
 - 关键参数用注释解释
 - 图表输出后紧接解释文字
@@ -251,9 +257,9 @@ sc.pp.calculate_qc_metrics(
 
 ## 五、视觉与排版规范
 
-### 5.1 Jupyter Book 主题配置
+### 5.1 MkDocs Material 主题配置
 
-使用默认 Jupyter Book 主题或 `sphinx-book-theme`，保持简洁学术风格。
+使用 `mkdocs-material` 主题，配置在 `mkdocs.yml` 中。支持亮/暗模式切换、代码高亮复制、搜索、导航标签页等功能。
 
 ### 5.2 图表规范
 
@@ -264,9 +270,9 @@ sc.pp.calculate_qc_metrics(
 
 ### 5.3 交叉引用
 
-- 章节间引用：`参见 [第 9 章：降维](../preprocessing/dimensionality_reduction.html)`
-- 术语引用：链接到 Glossary，如 `[UMI](../glossary.html#term-UMI)`
-- 文献引用：使用 BibTeX + `{cite}` 语法
+- 章节间引用：`参见 [第 9 章：多因素设计](09-Multi-factor-Design.md)`
+- 术语引用：链接到 Glossary，如 `[UMI](glossary.md#u)`
+- 文献引用：使用 Markdown 脚注格式 `[^author2023]`
 
 ---
 
@@ -318,12 +324,13 @@ sc.pp.calculate_qc_metrics(
 - [ ] 每个工具推荐都有 **benchmark 或文献支持**
 - [ ] 所有图表都有**图注和解释文字**
 - [ ] **Key Takeaways** 简洁有力（5-8 条）
-- [ ] 文献引用使用了 `{cite}` 语法
+- [ ] 文献引用使用了脚注 `[^ref]` 语法
 - [ ] 术语首次出现**附有英文**
-- [ ] **Warning** 框标注了常见陷阱
-- [ ] **Recommendation** 框标注了核心推荐
-- [ ] 代码风格符合 PEP 8
-- [ ] 环境依赖已记录在 environment yml 中
+- [ ] **Warning** 框标注了常见陷阱（`!!! warning`）
+- [ ] **Recommendation** 框标注了核心推荐（`!!! tip "Recommendation"`）
+- [ ] 代码风格符合 tidyverse style guide / PEP 8
+- [ ] 无 `---` 水平线分隔符（章节间用空行分隔）
+- [ ] 无 Contributors 节（已统一移除）
 
 ---
 
@@ -335,7 +342,7 @@ sc.pp.calculate_qc_metrics(
 |------|-------------|---------|
 | 风格 | 经典教科书 (Alberts 式) | Jupyter Book 技术指南 (sc-best-practices 式) |
 | 核心载体 | Markdown 文字 + 模式图 | **Jupyter Notebook (代码 + 输出)** |
-| 构建工具 | MkDocs Material | **Jupyter Book** |
+| 构建工具 | MkDocs Material | **MkDocs Material** |
 | 推荐态度 | 展示认知演变，不强推 | **明确推荐 best practice** |
 | 标注框 | 认知修正（金色）、思路拆解（绿色） | **Recommendation、Warning、Note** |
 | 语气 | 学术严谨 | 友好专业，偏实操 |
@@ -351,4 +358,39 @@ sc.pp.calculate_qc_metrics(
 2. **数据可获取性**：使用公开数据集，提供下载链接或 `backup_url`。
 3. **Benchmark 时效性**：写入正式章节前应搜索确认是否有更新的 benchmark。
 4. **持续更新**：生信工具迭代快，每 6-12 个月应检查推荐是否仍然有效。
-5. **社区贡献**：鼓励读者通过 GitHub Issue 提供反馈，每章标注 Contributors。
+5. **社区贡献**：鼓励读者通过 GitHub Issue 提供反馈。
+
+---
+
+## 九、项目当前状态
+
+### 9.1 已完成
+
+- Ch0-9：已全部完成 sc-best-practices 风格改造（Motivation → 代码 → 输出 → Key Takeaways）
+- Ch10-13：已完成基础风格统一（Motivation、admonition、Key Takeaways）；Ch12 待进一步润色
+- 术语表 `docs/glossary.md`：约 30 个核心术语，已加入 mkdocs.yml nav
+- 实跑验证：PRJDB11848 数据集端到端复现完成，验收数字（DEG 1541、LRT 2927）已固化
+- 结果快照：`artifacts/prjdb11848/` 已上传，含 CHECKSUMS.sha256
+
+### 9.2 约定与决策记录
+
+| 决策 | 说明 |
+|------|------|
+| 不设 Contributors 节 | 已从所有章节移除，不再使用 |
+| 不设 environments/ 目录 | 不提供 per-chapter Conda 环境文件 |
+| Admonition 语法 | 统一使用 MkDocs Material `!!!` 语法 |
+| 章节无 `---` 水平线 | 章节间用空行分隔，不使用水平线 |
+| 图表用 `<figure markdown>` | 带 `<figcaption>` 图注（Ch10 实跑结果图） |
+| 引用格式 | 使用 Markdown 脚注 `[^author2023]` |
+| README 定位 | GitHub 入口 + 5 步复现，详细内容指向在线文档 |
+| 在线文档地址 | `https://petemeng.github.io/RNA-seq-Tutorial/` |
+
+### 9.3 验收数字（PRJDB11848）
+
+| 指标 | 预期值 |
+|------|--------|
+| Salmon 定量样本数 | 36 |
+| WT 显著 DEG（padj < 0.05, \|log2FC\| > 1） | 1541 |
+| 交互项显著 DEG | 56 |
+| 时间序列 LRT 显著基因 | 2927 |
+| 教程展示图 | 7 张 |
