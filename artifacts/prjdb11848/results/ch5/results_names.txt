@@ -1,0 +1,6 @@
+Intercept
+genotype_clf_vs_WT
+time_0.5h_vs_0h
+time_3h_vs_0h
+condition_AvrRpm1_vs_mock
+genotypeclf.conditionAvrRpm1

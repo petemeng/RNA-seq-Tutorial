@@ -1,0 +1,12 @@
+
+  /// MultiQC 🔍 | v1.19
+
+|           multiqc | Search path : /home/data/t060551/Codex/RNA-seq-Tutorial/validation_run_downstream/data
+|           multiqc | Search path : /home/data/t060551/Codex/RNA-seq-Tutorial/validation_run_downstream/logs
+|         searching | ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 744/744  
+|            salmon | Found 36 meta reports
+|            salmon | Found 36 fragment length distributions
+|            salmon | Found 36 library format counts reports
+|           multiqc | Report      : validation_run_downstream/data/multiqc/multiqc_report.html
+|           multiqc | Data        : validation_run_downstream/data/multiqc/multiqc_report_data
+|           multiqc | MultiQC complete

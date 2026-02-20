@@ -1,0 +1,12 @@
+date: 2026-02-20T16:22:37+08:00
+repo_commit: d61babcd6dfa6a5444b0a7dbf358dfb69e9999be
+fastqc\t/home/data/t060551/miniconda3/envs/rnaseq_tutorial/bin/fastqc\tFastQC v0.12.1
+multiqc\t/home/data/t060551/miniconda3/envs/rnaseq_tutorial/bin/multiqc\tmultiqc, version 1.19
+fastp\t/home/data/t060551/miniconda3/envs/rnaseq_tutorial/bin/fastp\tversion_not_reported
+STAR\t/home/data/t060551/miniconda3/envs/rnaseq_tutorial/bin/STAR\t2.7.11b
+salmon\t/home/data/t060551/miniconda3/envs/rnaseq_tutorial/bin/salmon\tsalmon 1.10.2
+featureCounts\t/home/data/t060551/miniconda3/envs/rnaseq_tutorial/bin/featureCounts\tversion_not_reported
+samtools\t/usr/bin/samtools\tsamtools 1.10
+pigz\t/usr/bin/pigz\tãêJ∞h
+wget\t/usr/bin/wget\tGNU Wget 1.20.3 built on linux-gnu.
+Rscript\t/usr/local/bin/Rscript\tRscript (R) version 4.4.0 (2024-04-24)

@@ -1,0 +1,92 @@
+Warning message:
+multiple methods tables found for ‘sort’ 
+[0;1;31mFailed to create bus connection: Operation not permitted[0m
+reading in files with read_tsv
+1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 
+summarizing abundance
+summarizing counts
+summarizing length
+Warning message:
+In system("timedatectl", intern = TRUE) :
+  running command 'timedatectl' had status 1
+using just counts from tximport
+estimating size factors
+estimating dispersions
+gene-wise dispersion estimates
+mean-dispersion relationship
+final dispersion estimates
+fitting model and testing
+using ntop=500 top features by variance
+null device 
+          1 
+using 'apeglm' for LFC shrinkage. If used in published research, please cite:
+    Zhu, A., Ibrahim, J.G., Love, M.I. (2018) Heavy-tailed prior distributions for
+    sequence count data: removing the noise and preserving large differences.
+    Bioinformatics. https://doi.org/10.1093/bioinformatics/bty895
+'select()' returned 1:1 mapping between keys and columns
+'select()' returned 1:1 mapping between keys and columns
+Warning messages:
+1: In bitr(sig_gene_tair, fromType = "TAIR", toType = "ENTREZID", OrgDb = org.At.tair.db) :
+  0.91% of input gene IDs are fail to map...
+2: In bitr(universe_tair, fromType = "TAIR", toType = "ENTREZID", OrgDb = org.At.tair.db) :
+  0.72% of input gene IDs are fail to map...
+'select()' returned 1:1 mapping between keys and columns
+Warning message:
+In bitr(names(gene_rank), fromType = "TAIR", toType = "ENTREZID",  :
+  0.72% of input gene IDs are fail to map...
+Warning messages:
+1: In fgseaMultilevel(pathways = pathways, stats = stats, minSize = minSize,  :
+  For some of the pathways the P-values were likely overestimated. For such pathways log2err is set to NA.
+2: In fgseaMultilevel(pathways = pathways, stats = stats, minSize = minSize,  :
+  For some pathways, in reality P-values are less than 1e-10. You can set the `eps` argument to zero for better estimation.
+Allowing multi-threading with up to 16 threads.
+ Flagging genes and samples with too many missing values...
+  ..step 1
+pickSoftThreshold: will use block size 5000.
+ pickSoftThreshold: calculating connectivity for given powers...
+   ..working on genes 1 through 5000 of 5000
+   Power SFT.R.sq   slope truncated.R.sq mean.k. median.k. max.k.
+1      1  0.65100  4.3900          0.712    2580      2610   2930
+2      2  0.47900  2.2600          0.682    1670      1690   2090
+3      3  0.53900  2.0400          0.841    1210      1230   1660
+4      4  0.56100  1.6200          0.921     932       943   1390
+5      5  0.51800  1.1700          0.945     750       752   1210
+6      6  0.41000  0.8070          0.942     621       612   1080
+7      7  0.26800  0.5170          0.938     525       508    971
+8      8  0.12000  0.2880          0.937     451       429    884
+9      9  0.01960  0.1040          0.901     392       364    812
+10    10  0.00147 -0.0271          0.882     344       314    749
+11    11  0.04830 -0.1510          0.877     305       274    695
+12    12  0.16300 -0.2780          0.880     272       240    647
+There were 18 warnings (use warnings() to see them)
+ Calculating module eigengenes block-wise from all genes
+   Flagging genes and samples with too many missing values...
+    ..step 1
+ ..Working on block 1 .
+    TOM calculation: adjacency..
+    ..will use 16 parallel threads.
+     Fraction of slow calculations: 0.000000
+    ..connectivity..
+    ..matrix multiplication (system BLAS)..
+    ..normalization..
+    ..done.
+ ..merging modules that are too close..
+Warning messages:
+1: In bicor(c(4.03295292718867, 5.06740635315507, 3.77079846606689,  :
+  bicor: zero MAD in variable 'x'. Pearson correlation was used for individual columns with zero (or missing) MAD.
+2: In bicor(c(6.68292800021622, 8.96309188689727, 8.17028149568334,  :
+  bicor: zero MAD in variable 'x'. Pearson correlation was used for individual columns with zero (or missing) MAD.
+3: In (function (x, y = NULL, robustX = TRUE, robustY = TRUE, use = "all.obs",  :
+  bicor: zero MAD in variable 'x'. Pearson correlation was used for individual columns with zero (or missing) MAD.
+reading in files with read_tsv
+1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 
+summarizing abundance
+summarizing counts
+summarizing length
+using just counts from tximport
+estimating size factors
+estimating dispersions
+gene-wise dispersion estimates
+mean-dispersion relationship
+final dispersion estimates
+fitting model and testing

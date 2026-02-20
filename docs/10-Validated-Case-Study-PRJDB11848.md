@@ -4,6 +4,21 @@
 
 ---
 
+## 10.0 代码与结果的网页可见位置
+
+本章同时区分两类路径：
+
+- 运行目录（本地执行时会写入）：`validation_run_downstream/`
+- 已上传快照（GitHub 网页可直接查看）：`artifacts/prjdb11848/`
+
+快速入口：
+
+- 产物目录：`artifacts/prjdb11848/`
+- 文件清单：`artifacts/prjdb11848/FILELIST.txt`
+- 校验文件：`artifacts/prjdb11848/CHECKSUMS.sha256`
+
+---
+
 ## 10.1 实战数据与设计
 
 - 数据集：`PRJDB11848`（`Arabidopsis thaliana`）
