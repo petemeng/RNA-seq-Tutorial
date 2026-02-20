@@ -139,45 +139,22 @@ mat_corrected <- removeBatchEffect(mat, batch = colData(dds)$batch)
 
 ---
 
-## 4.10 本教程实跑代码与结果（PRJDB11848）
+---
 
-### 代码：Chapter 4 实跑片段（对应 `scripts/04_downstream_ch4_to_ch9.R`）
+## 4.10 本章实跑代码与结果（PRJDB11848）
 
-```bash
-Rscript - <<'RSCRIPT'
-library(DESeq2)
-library(pheatmap)
-
-# dds 已在前面章节构建并完成 DESeq()
-vsd <- vst(dds, blind = FALSE)
-
-# PCA 数据导出
-pca_df <- plotPCA(vsd, intgroup = c("genotype", "condition", "time"), returnData = TRUE)
-write.csv(pca_df, "validation_run_downstream/results/ch4/PCA_data.csv", row.names = FALSE)
-
-# 样本距离热图
-sample_dists <- dist(t(assay(vsd)))
-sample_mat <- as.matrix(sample_dists)
-pdf("validation_run_downstream/results/ch4/sample_distance_heatmap.pdf", width = 8, height = 6)
-pheatmap(sample_mat, annotation_col = as.data.frame(colData(dds)[, c("genotype", "condition", "time")]))
-dev.off()
-RSCRIPT
-```
-
-### 代码：验收命令
+本章对应实跑命令：
 
 ```bash
-wc -l artifacts/prjdb11848/results/ch4/PCA_data.csv
-ls docs/assets/validated_case/ch4_pca.png
+Rscript scripts/04_downstream_ch4_to_ch9.R
 ```
 
-### 输出结果
+已上传快照：
 
-```text
-37 /home/data/t060551/Codex/RNA-seq-Tutorial/artifacts/prjdb11848/results/ch4/PCA_data.csv
-/home/data/t060551/Codex/RNA-seq-Tutorial/docs/assets/validated_case/ch4_pca.png
-```
+- `artifacts/prjdb11848/results/ch4/PCA_data.csv`
+- `artifacts/prjdb11848/results/ch4/sample_distance_heatmap.pdf`
 
 PCA 实跑结果图：
 
 ![PCA](assets/validated_case/ch4_pca.png)
+

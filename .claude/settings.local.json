@@ -7,7 +7,15 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(git branch:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(gh run list --limit 3)",
+      "mcp__github__list_commits",
+      "mcp__github__list_branches",
+      "mcp__github__get_file_contents",
+      "WebFetch(domain:www.sc-best-practices.org)",
+      "Bash(git checkout:*)",
+      "Bash(git rebase:*)",
+      "Bash(GIT_EDITOR=true git rebase:*)"
     ]
   }
 }

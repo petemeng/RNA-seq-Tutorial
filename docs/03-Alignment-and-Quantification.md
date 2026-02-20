@@ -161,93 +161,41 @@ txi <- tximport(files, type = "salmon", tx2gene = tx2gene, countsFromAbundance =
 
 ---
 
-## 3.9 本教程实跑代码与结果（PRJDB11848）
+---
 
-### 代码：样本表生成（对应 `scripts/01_prepare_prjdb11848_samplesheet.sh`）
+## 3.9 本章实跑代码与结果（PRJDB11848）
 
-```bash
-BASE_DIR="validation_run_downstream"
-META_DIR="${BASE_DIR}/metadata"
-mkdir -p "${META_DIR}"
-
-wget -qO "${META_DIR}/prjdb11848.tsv" \
-  "https://www.ebi.ac.uk/ena/portal/api/filereport?accession=PRJDB11848&result=read_run&fields=run_accession,sample_title,scientific_name,library_layout,fastq_ftp"
-
-awk -F"\t" '
-BEGIN{
-  OFS=",";
-  print "sample_id,run,genotype,condition,time,replicate,layout,fastq_1,fastq_2,batch";
-}
-NR>1{
-  run=$1; title=$2; layout=$4; ftp=$5;
-  n=split(title,a,"_");
-  genotype=a[1]; condition=a[2]; time=a[3]; rep=a[4];
-  split(ftp,f,";");
-  gsub(/^ftp\.sra\.ebi\.ac\.uk\//,"",f[1]);
-  gsub(/^ftp\.sra\.ebi\.ac\.uk\//,"",f[2]);
-  fq1="http://ftp.sra.ebi.ac.uk/" f[1];
-  fq2="http://ftp.sra.ebi.ac.uk/" f[2];
-  sample_id=run;
-  print sample_id,run,genotype,condition,time,rep,layout,fq1,fq2,"B1";
-}
-' "${META_DIR}/prjdb11848.tsv" > "${META_DIR}/samplesheet.csv"
-```
-
-### 代码：FASTQ 下载（对应 `scripts/02_download_fastq.sh`）
+以下命令已在教程环境实跑通过：
 
 ```bash
-BASE_DIR="validation_run_downstream"
-SHEET="${BASE_DIR}/metadata/samplesheet.csv"
-RAW_DIR="${BASE_DIR}/data/raw_data"
-mkdir -p "${RAW_DIR}"
+# 生成样本表
+bash scripts/01_prepare_prjdb11848_samplesheet.sh
 
-awk -F',' 'NR>1 {print $8"\n"$9}' "${SHEET}" | while read -r url; do
-  [[ -z "${url}" ]] && continue
-  wget -c -nv --tries=1 --timeout=30 "${url}" -P "${RAW_DIR}/"
-done
+# 下载 FASTQ
+bash scripts/02_download_fastq.sh
+
+# Salmon 定量
+bash scripts/03_quantify_salmon.sh
 ```
 
-### 代码：Salmon 定量（对应 `scripts/03_quantify_salmon.sh`）
+本地运行目录（脚本执行时生成）：
 
-```bash
-BASE_DIR="validation_run_downstream"
-SHEET="${BASE_DIR}/metadata/samplesheet.csv"
-RAW_DIR="${BASE_DIR}/data/raw_data"
-QUANT_DIR="${BASE_DIR}/data/quant"
-SALMON_INDEX="${BASE_DIR}/data/reference/salmon_index"
-mkdir -p "${QUANT_DIR}"
+- `validation_run_downstream/metadata/samplesheet.csv`
+- `validation_run_downstream/data/raw_data/*.fastq.gz`
+- `validation_run_downstream/data/quant/<sample_id>/quant.sf`
+- `validation_run_downstream/logs/salmon_quant_<sample_id>.log`
 
-while IFS=',' read -r sample_id run genotype condition time replicate layout fastq1 fastq2 batch; do
-  [[ "${sample_id}" == "sample_id" ]] && continue
-  f1="${RAW_DIR}/$(basename "${fastq1}")"
-  f2="${RAW_DIR}/$(basename "${fastq2}")"
+已上传快照（网页可直接查看）：
 
-  salmon quant \
-    -i "${SALMON_INDEX}" \
-    -l A \
-    -1 "${f1}" \
-    -2 "${f2}" \
-    --validateMappings \
-    --gcBias \
-    --seqBias \
-    -p 8 \
-    -o "${QUANT_DIR}/${sample_id}"
-done < "${SHEET}"
-```
+- `artifacts/prjdb11848/metadata/samplesheet.csv`
+- `artifacts/prjdb11848/logs/salmon_quant_<sample_id>.log`
+- `artifacts/prjdb11848/logs/download_fastq.log`
 
-### 代码：验收命令
+本次实跑 mapping rate（36 样本）：
 
-```bash
-wc -l artifacts/prjdb11848/metadata/samplesheet.csv
+- `min = 63.953%`
+- `mean = 95.231%`
+- `max = 97.471%`
 
-rg -N 'Mapping rate =' artifacts/prjdb11848/logs/salmon_quant_*.log \
-  | sed -E 's/.*Mapping rate = ([0-9.]+)%.*/\1/' \
-  | awk 'BEGIN{min=100;max=0;sum=0;n=0} {x=$1; if(x<min)min=x; if(x>max)max=x; sum+=x; n++} END{printf "n=%d min=%.3f mean=%.3f max=%.3f\n",n,min,sum/n,max}'
-```
+说明：`raw_data` 与 `quant.sf` 体积较大，不纳入仓库快照；可通过 Step 1-3 脚本在本地重建。
 
-### 输出结果
-
-```text
-37 /home/data/t060551/Codex/RNA-seq-Tutorial/artifacts/prjdb11848/metadata/samplesheet.csv
-n=36 min=63.953 mean=95.231 max=97.471
-```

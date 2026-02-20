@@ -169,3 +169,22 @@ Salmon: 1.10.2
 - `reference_manifest.txt` 已写入结果目录。
 
 完成后进入 QC 与清洗章节。
+
+---
+
+## 1.10 本章实跑代码与结果（PRJDB11848）
+
+本章在实跑流程中的可核验产物：
+
+- `artifacts/prjdb11848/tool_versions.txt`
+- `artifacts/prjdb11848/metadata/tx2gene.tsv`
+- `artifacts/prjdb11848/results/R_sessionInfo.txt`
+
+快速验收：
+
+```bash
+sed -n '1,40p' artifacts/prjdb11848/tool_versions.txt
+```
+
+说明：上面三个文件分别对应“工具版本锁定”“转录本到基因映射”“R 环境记录”，是复现性三件套。
+

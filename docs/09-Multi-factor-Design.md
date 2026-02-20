@@ -87,7 +87,7 @@ res_treat_in_clf <- results(
 
 - `res_treat_in_wt` 讲 WT 的处理响应。
 - `res_interaction` 讲 Mut 相对 WT 的“额外变化”。
-- `res_treat_in_mut` 才是 Mut 的处理总响应。
+- `res_treat_in_clf` 才是 clf 的处理总响应。
 
 ---
 
@@ -109,10 +109,10 @@ gene_id <- "AT1G01010"
 df_plot <- tibble(
   expr = assay(vsd)[gene_id, ],
   genotype = colData(dds)$genotype,
-  treatment = colData(dds)$treatment
+  condition = colData(dds)$condition
 )
 
-ggplot(df_plot, aes(x = treatment, y = expr, color = genotype, group = genotype)) +
+ggplot(df_plot, aes(x = condition, y = expr, color = genotype, group = genotype)) +
   stat_summary(fun = mean, geom = "line", linewidth = 1) +
   stat_summary(fun = mean, geom = "point", size = 3)
 ```
@@ -121,7 +121,7 @@ ggplot(df_plot, aes(x = treatment, y = expr, color = genotype, group = genotype)
 
 ## 9.6 常见翻车点清单
 
-1. **混杂设计**：例如 `batch` 与 `treatment` 完全重合，模型无法识别真实效应。
+1. **混杂设计**：例如 `batch` 与 `condition` 完全重合，模型无法识别真实效应。
 2. **参考水平没设定**：导致结果名称和解释完全跑偏。
 3. **把主效应当总效应解读**：在含交互模型中这是常见错误。
 4. **拆组分别跑 DESeq2**：损失统计效率，也难以统一解释。
@@ -135,69 +135,33 @@ ggplot(df_plot, aes(x = treatment, y = expr, color = genotype, group = genotype)
 
 ---
 
-## 9.8 本教程实跑代码与结果（PRJDB11848）
+---
 
-### 代码：Chapter 9 实跑片段（对应 `scripts/04_downstream_ch4_to_ch9.R`）
+## 9.8 本章实跑代码与结果（PRJDB11848）
 
-```r
-# 多因素模型结果提取
-res_treat_in_wt <- results(dds, name = "condition_AvrRpm1_vs_mock")
-res_interaction <- results(dds, name = "genotypeclf.conditionAvrRpm1")
-res_treat_in_clf <- results(dds, list(c("condition_AvrRpm1_vs_mock", "genotypeclf.conditionAvrRpm1")))
+本章对应实跑命令：
 
-write.csv(as.data.frame(res_treat_in_wt), "validation_run_downstream/results/ch9/res_treat_in_wt.csv")
-write.csv(as.data.frame(res_interaction), "validation_run_downstream/results/ch9/res_interaction.csv")
-write.csv(as.data.frame(res_treat_in_clf), "validation_run_downstream/results/ch9/res_treat_in_clf.csv")
+```bash
+Rscript scripts/04_downstream_ch4_to_ch9.R
+Rscript scripts/05_generate_case_figures.R
 ```
 
-### 代码：交互项火山图（对应 `scripts/05_generate_case_figures.R`）
+结果文件：
 
-```r
-library(readr)
-library(ggplot2)
+- `artifacts/prjdb11848/results/ch9/res_treat_in_wt.csv`
+- `artifacts/prjdb11848/results/ch9/res_interaction.csv`
+- `artifacts/prjdb11848/results/ch9/res_treat_in_clf.csv`
 
-inter <- read_csv("validation_run_downstream/results/ch9/res_interaction.csv", show_col_types = FALSE)
-inter$neglog10padj <- -log10(pmax(inter$padj, 1e-300))
-inter$sig <- ifelse(!is.na(inter$padj) & inter$padj < 0.05 & abs(inter$log2FoldChange) > 1, "Sig", "NS")
-
-p_inter <- ggplot(inter, aes(log2FoldChange, neglog10padj, color = sig)) +
-  geom_point(alpha = 0.6, size = 1.0) +
-  scale_color_manual(values = c("Sig" = "#6a3d9a", "NS" = "grey70")) +
-  theme_bw(base_size = 12) +
-  labs(title = "Interaction Volcano (clf:AvrRpm1)", x = "log2FoldChange", y = "-log10(padj)")
-
-grDevices::png("docs/assets/validated_case/ch9_interaction_volcano.png", width = 6.8, height = 5.2, units = "in", res = 150)
-print(p_inter)
-grDevices::dev.off()
-```
-
-### 代码：验收命令
+验收命令（3 个文件都存在）：
 
 ```bash
 ls artifacts/prjdb11848/results/ch9/res_treat_in_wt.csv \
    artifacts/prjdb11848/results/ch9/res_interaction.csv \
    artifacts/prjdb11848/results/ch9/res_treat_in_clf.csv
-
-wc -l artifacts/prjdb11848/results/ch9/res_treat_in_wt.csv \
-      artifacts/prjdb11848/results/ch9/res_interaction.csv \
-      artifacts/prjdb11848/results/ch9/res_treat_in_clf.csv
-
-awk -F, 'NR>1 && $7!="" && $7<0.05 && (($3+0>1)||($3+0<-1)) {n++} END{print n+0}' artifacts/prjdb11848/results/ch9/res_interaction.csv
-```
-
-### 输出结果
-
-```text
-/home/data/t060551/Codex/RNA-seq-Tutorial/artifacts/prjdb11848/results/ch9/res_interaction.csv
-/home/data/t060551/Codex/RNA-seq-Tutorial/artifacts/prjdb11848/results/ch9/res_treat_in_clf.csv
-/home/data/t060551/Codex/RNA-seq-Tutorial/artifacts/prjdb11848/results/ch9/res_treat_in_wt.csv
-  17453 /home/data/t060551/Codex/RNA-seq-Tutorial/artifacts/prjdb11848/results/ch9/res_treat_in_wt.csv
-  17453 /home/data/t060551/Codex/RNA-seq-Tutorial/artifacts/prjdb11848/results/ch9/res_interaction.csv
-  17453 /home/data/t060551/Codex/RNA-seq-Tutorial/artifacts/prjdb11848/results/ch9/res_treat_in_clf.csv
-  52359 total
-56
 ```
 
 交互项火山图：
 
 ![Interaction Volcano](assets/validated_case/ch9_interaction_volcano.png)
+
+

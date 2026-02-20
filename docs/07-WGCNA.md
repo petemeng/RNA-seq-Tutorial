@@ -160,72 +160,22 @@ WGCNA 适合“样本量较大 + 目标是系统层解释”的场景。
 
 ---
 
-## 7.9 本教程实跑代码与结果（PRJDB11848）
+---
 
-### 代码：Chapter 7 实跑片段（对应 `scripts/04_downstream_ch4_to_ch9.R`）
+## 7.9 本章实跑代码与结果（PRJDB11848）
 
-```r
-library(WGCNA)
-allowWGCNAThreads(nThreads = 16)
-
-expr <- assay(vsd)
-expr <- expr[rowMeans(counts(dds, normalized = TRUE)) > 10, ]
-
-# 教程运行时长控制：限制为高变 5000 基因
-if (nrow(expr) > 5000) {
-  vars <- apply(expr, 1, var)
-  keep_genes <- names(sort(vars, decreasing = TRUE))[1:5000]
-  expr <- expr[keep_genes, , drop = FALSE]
-}
-
-datExpr <- t(expr)
-gsg <- goodSamplesGenes(datExpr, verbose = 3)
-datExpr <- datExpr[gsg$goodSamples, gsg$goodGenes]
-
-powers <- 1:12
-sft <- pickSoftThreshold(datExpr, powerVector = powers, networkType = "signed", corFnc = "bicor", verbose = 5)
-write.csv(sft$fitIndices, "validation_run_downstream/results/ch7/wgcna_soft_threshold.csv", row.names = FALSE)
-
-softPower <- 6
-net <- blockwiseModules(
-  datExpr,
-  power = softPower,
-  networkType = "signed",
-  TOMType = "signed",
-  corType = "bicor",
-  minModuleSize = 30,
-  mergeCutHeight = 0.25,
-  pamRespectsDendro = FALSE,
-  numericLabels = TRUE,
-  verbose = 2
-)
-
-moduleColors <- labels2colors(net$colors)
-MEs <- net$MEs
-write.csv(data.frame(gene = colnames(datExpr), module = moduleColors), "validation_run_downstream/results/ch7/wgcna_modules.csv", row.names = FALSE)
-
-trait <- as.numeric(samples$condition[match(rownames(datExpr), samples$sample_id)] == "AvrRpm1")
-moduleTraitCor <- bicor(MEs, trait, use = "pairwise.complete.obs")
-moduleTraitP <- corPvalueStudent(moduleTraitCor, nSamples = nrow(datExpr))
-write.csv(moduleTraitCor, "validation_run_downstream/results/ch7/module_trait_cor.csv")
-write.csv(moduleTraitP, "validation_run_downstream/results/ch7/module_trait_p.csv")
-```
-
-### 代码：验收命令
+本章对应实跑命令：
 
 ```bash
-wc -l artifacts/prjdb11848/results/ch7/wgcna_soft_threshold.csv \
-      artifacts/prjdb11848/results/ch7/wgcna_modules.csv \
-      artifacts/prjdb11848/results/ch7/module_trait_cor.csv \
-      artifacts/prjdb11848/results/ch7/module_trait_p.csv
+Rscript scripts/04_downstream_ch4_to_ch9.R
 ```
 
-### 输出结果
+结果文件：
 
-```text
-    13 /home/data/t060551/Codex/RNA-seq-Tutorial/artifacts/prjdb11848/results/ch7/wgcna_soft_threshold.csv
-  5001 /home/data/t060551/Codex/RNA-seq-Tutorial/artifacts/prjdb11848/results/ch7/wgcna_modules.csv
-    11 /home/data/t060551/Codex/RNA-seq-Tutorial/artifacts/prjdb11848/results/ch7/module_trait_cor.csv
-    11 /home/data/t060551/Codex/RNA-seq-Tutorial/artifacts/prjdb11848/results/ch7/module_trait_p.csv
-  5036 total
-```
+- `artifacts/prjdb11848/results/ch7/wgcna_soft_threshold.csv`
+- `artifacts/prjdb11848/results/ch7/wgcna_modules.csv`
+- `artifacts/prjdb11848/results/ch7/module_trait_cor.csv`
+- `artifacts/prjdb11848/results/ch7/module_trait_p.csv`
+
+说明：为保证教程运行时长可控，实跑脚本将构网输入限制为高变 `5000` 基因。
+
