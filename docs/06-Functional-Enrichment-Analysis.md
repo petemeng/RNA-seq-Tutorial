@@ -161,7 +161,7 @@ ekk <- enrichKEGG(
 
 1. 解释时同时关注显著性和方向（NES / enrichment direction）。
 2. 合并高度重叠条目，避免重复叙事。
-3. 回到拟南芥免疫背景，优先解释与 flg22 响应相关通路。
+3. 回到拟南芥免疫背景，优先解释与 AvrRpm1 响应相关通路。
 4. 输出“候选通路 + 关键基因 + 证据图”三联表。
 
 ---
@@ -199,6 +199,13 @@ Rscript scripts/05_generate_case_figures.R
 
 - `validation_run_downstream/results/ch6/GO_ORA_WT.csv`
 - `validation_run_downstream/results/ch6/GO_GSEA_WT.csv`
+
+验收命令（结果文件非空）：
+
+```bash
+wc -l validation_run_downstream/results/ch6/GO_ORA_WT.csv \
+      validation_run_downstream/results/ch6/GO_GSEA_WT.csv
+```
 
 GO ORA Top terms：
 
