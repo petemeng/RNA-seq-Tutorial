@@ -147,26 +147,70 @@ pheatmap(
 
 ## 8.9 本教程实跑代码与结果（PRJDB11848）
 
-本章对应的实跑代码在下游一体化脚本中：
+### 代码：Chapter 8 实跑片段（对应 `scripts/04_downstream_ch4_to_ch9.R`）
 
-```bash
-Rscript scripts/04_downstream_ch4_to_ch9.R
-Rscript scripts/05_generate_case_figures.R
+```r
+library(DESeq2)
+library(tximport)
+
+# WT 子集
+wt_samples <- samples[samples$genotype == "WT", ]
+wt_files <- file.path(base_dir, "data", "quant", wt_samples$sample_id, "quant.sf")
+names(wt_files) <- wt_samples$sample_id
+
+txi_wt <- tximport(wt_files, type = "salmon", tx2gene = tx2gene, countsFromAbundance = "lengthScaledTPM")
+
+dds_wt <- DESeqDataSetFromTximport(
+  txi_wt,
+  colData = as.data.frame(wt_samples),
+  design = ~ condition + time + condition:time
+)
+
+keep_wt <- rowSums(counts(dds_wt) >= 10) >= 3
+dds_wt <- dds_wt[keep_wt, ]
+dds_wt_lrt <- DESeq(dds_wt, test = "LRT", reduced = ~ condition + time)
+
+res_lrt <- results(dds_wt_lrt)
+res_lrt_df <- as.data.frame(res_lrt)
+res_lrt_df <- res_lrt_df[order(res_lrt_df$padj), ]
+write.csv(res_lrt_df, file.path(base_dir, "results/ch8/time_series_LRT_WT.csv"))
+
+sig_dynamic <- subset(res_lrt_df, !is.na(padj) & padj < 0.05)
+write.csv(sig_dynamic, file.path(base_dir, "results/ch8/time_series_LRT_WT_sig.csv"))
 ```
 
-真实结果（WT 子集 LRT）：
+### 代码：padj 分布图（对应 `scripts/05_generate_case_figures.R`）
 
-- 显著动态基因（`padj < 0.05`）：`2927`
+```r
+library(ggplot2)
+library(readr)
 
-结果文件：
+lrt <- read_csv(file.path(base_dir, "results/ch8/time_series_LRT_WT.csv"), show_col_types = FALSE)
 
-- `validation_run_downstream/results/ch8/time_series_LRT_WT.csv`
-- `validation_run_downstream/results/ch8/time_series_LRT_WT_sig.csv`
+p_lrt <- ggplot(lrt, aes(padj)) +
+  geom_histogram(bins = 50, fill = "#33a02c", color = "white") +
+  theme_bw(base_size = 12) +
+  labs(title = "LRT adjusted p-value distribution (WT)", x = "padj", y = "Gene count")
 
-验收命令（预期输出 `2927`）：
+grDevices::png("docs/assets/validated_case/ch8_lrt_padj_hist.png", width = 6.5, height = 4.8, units = "in", res = 150)
+print(p_lrt)
+grDevices::dev.off()
+```
+
+### 代码：验收命令
 
 ```bash
-tail -n +2 validation_run_downstream/results/ch8/time_series_LRT_WT_sig.csv | wc -l
+tail -n +2 artifacts/prjdb11848/results/ch8/time_series_LRT_WT_sig.csv | wc -l
+head -n 3 artifacts/prjdb11848/results/ch8/time_series_LRT_WT_sig.csv
+```
+
+### 输出结果
+
+```text
+2927
+"","baseMean","log2FoldChange","lfcSE","stat","pvalue","padj"
+"AT5G04140",4003.82180526792,-1.21881482066899,0.154193085409381,158.375766513059,4.06573686942051e-35,6.76945188758516e-31
+"AT2G37710",4010.27684144751,1.10955082167625,0.179225289536766,144.702484110701,3.78664696027715e-32,3.15238359443073e-28
 ```
 
 padj 分布图：
