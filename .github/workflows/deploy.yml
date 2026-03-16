@@ -6,6 +6,7 @@ on:
     paths:
       - "docs/**"
       - "mkdocs.yml"
+      - "requirements-docs.txt"
       - ".github/workflows/deploy.yml"
   workflow_dispatch:
 
@@ -15,7 +16,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: "pages"
+  group: pages
   cancel-in-progress: false
 
 jobs:
@@ -30,9 +31,8 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install MkDocs
-        run: |
-          pip install "mkdocs<2" "mkdocs-material>=9,<10"
+      - name: Install docs dependencies
+        run: pip install -r requirements-docs.txt
 
       - name: Build site
         run: mkdocs build --strict
